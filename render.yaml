@@ -2,7 +2,7 @@ services:
   - type: web
     name: datawrangler-ai
     env: python
-    buildCommand: "pip install -r requirements.txt && python3 -m app.ingestion.football_data && python3 -m app.ingestion.upcoming_fixtures"
+    buildCommand: "pip install -r requirements.txt && python3 scripts/init_db.py && python3 -m app.ingestion.football_data && python3 -m app.ingestion.upcoming_fixtures"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
