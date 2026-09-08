@@ -5,6 +5,12 @@ This is explicitly designed to be run during CI/CD build phases (like Render.com
 before the FastAPI server actually starts or before any ingestion scripts run.
 """
 
+import sys
+import os
+
+# Ensure the root project directory is in the Python path so it can find the 'app' module
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.db.database import engine, Base
 import app.models  # Ensures models are imported so SQLAlchemy knows about them
 
