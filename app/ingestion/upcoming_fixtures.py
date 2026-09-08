@@ -81,10 +81,14 @@ class UpcomingFixturesIngestor:
         url = f"{PULSE_FIXTURES_URL}?comps=1&compSeasons={comp_season_id}&pageSize=380"
         
         async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(url, headers=HEADERS)
-            resp.raise_for_status()
-            data = resp.json()
-
+            try:
+                resp = await client.get(url, headers=HEADERS)
+                resp.raise_for_status()
+                data = resp.json()
+            except Exception as e:
+                logger.warning(f"Failed to fetch or parse upcoming fixtures: {e}. API may be blocking cloud IPs.")
+                data = {}
+        
         fixtures = data.get("content", [])
         ingested_count = 0
 
