@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: datawrangler-ai
+    env: python
+    buildCommand: "pip install -r requirements.txt && python3 -m app.ingestion.football_data && python3 -m app.ingestion.upcoming_fixtures"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET_KEY
+        generateValue: true
