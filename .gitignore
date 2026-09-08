@@ -17,7 +17,6 @@ ENV/
 # Databases
 *.sqlite3
 *.db
-epl_quant.db
 
 # IDEs and Editors
 .vscode/
