@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataWrangler.AI - Bloomberg Terminal for Sports Betting & HT/FT Goal Modeling</title>
+    <meta name="description"
+        content="Interactive quantitative sports analytics software. Calculate empirical probabilities for Premier League Half-Time and Full-Time goals based on custom scenario constraints.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #161b22;
+            --bg-terminal: #0d1117;
+            --bg-input: #21262d;
+            --border-color: #30363d;
+            --border-accent: rgba(137, 87, 229, 0.4);
+            --accent-purple: #8957e5;
+            --accent-purple-glow: rgba(137, 87, 229, 0.25);
+            --accent-magenta: #f472b6;
+            --accent-pink: #db61a2;
+            --accent-pink-glow: rgba(244, 114, 182, 0.2);
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SFMono-Regular', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(137, 87, 229, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 65%, rgba(244, 114, 182, 0.07) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header Navigation */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 17, 23, 0.9);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-magenta));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #ffffff;
+            box-shadow: 0 0 16px var(--accent-purple-glow);
+        }
+
+        .terminal-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.65rem;
+            background: rgba(137, 87, 229, 0.15);
+            border: 1px solid rgba(137, 87, 229, 0.35);
+            border-radius: 20px;
+            color: var(--accent-magenta);
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+            color: #ffffff;
+            font-weight: 700;
+            padding: 0.65rem 1.35rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 16px var(--accent-purple-glow);
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(137, 87, 229, 0.45);
+            background: linear-gradient(135deg, #9333ea, var(--accent-purple));
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0 2.5rem;
+            text-align: center;
+            max-width: 880px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 3.25rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        /* Terminal Demo App Container */
+        .terminal-app {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            margin-bottom: 5rem;
+        }
+
+        .terminal-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--accent-magenta);
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-magenta);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-magenta);
+        }
+
+        /* Controls Panel */
+        .terminal-body {
+            padding: 1.75rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.75rem;
+        }
+
+        .controls-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.825rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        select, input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .toggle-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.35rem;
+            background: var(--bg-input);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.45rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-purple);
+            color: #ffffff;
+            box-shadow: 0 0 10px var(--accent-purple-glow);
+        }
+
+        /* Results Display */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+        }
+
+        .metric-val {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--accent-magenta);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-secondary);
+            padding: 0.85rem 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        .score-tag {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            background: rgba(244, 114, 182, 0.12);
+            color: var(--accent-magenta);
+            border: 1px solid rgba(244, 114, 182, 0.25);
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 4rem 0 6rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pricing-card {
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border: 1px solid var(--accent-purple);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 0 40px var(--accent-purple-glow);
+            text-align: center;
+        }
+
+        .pricing-price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 1rem 0;
+            font-family: var(--font-mono);
+        }
+
+        /* AUTH MODAL OVERLAY */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(7, 9, 14, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .auth-modal {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-purple);
+            border-radius: 16px;
+            box-shadow: 0 0 50px var(--accent-purple-glow);
+            overflow: hidden;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .auth-modal-overlay.active .auth-modal {
+            transform: translateY(0);
+        }
+
+        .auth-modal-header {
+            padding: 1.5rem 1.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .auth-modal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+
+        .close-modal-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .auth-tab {
+            padding: 0.85rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .auth-tab.active {
+            color: var(--accent-magenta);
+            border-bottom-color: var(--accent-magenta);
+            background: rgba(137, 87, 229, 0.1);
+        }
+
+        .auth-body {
+            padding: 1.75rem;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .auth-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .auth-form-label {
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .auth-error-box {
+            padding: 0.65rem 0.85rem;
+            background: rgba(248, 81, 73, 0.15);
+            border: 1px solid rgba(248, 81, 73, 0.4);
+            border-radius: 6px;
+            color: #ff7b72;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            justify-content: center;
+        }
+
+        .auth-switch-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 1.25rem;
+        }
+
+        .auth-switch-link {
+            color: var(--accent-magenta);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-switch-link:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 960px) {
+            .terminal-body {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <div class="logo-icon">DW</div>
+                <span>DataWrangler.AI</span>
+                <span class="terminal-badge">EPL Modeling Terminal</span>
+            </a>
+            <nav class="nav-links" id="nav-links-container">
+                <a href="#terminal" class="nav-link">Software Terminal</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <button class="nav-link" id="nav-login-link" onclick="openAuthModal('login')" style="background:transparent; border:none; cursor:pointer;">Log In</button>
+                <button class="btn-primary" id="nav-launch-btn" onclick="openAuthModal('register')">Launch Full Software</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="container hero">
+        <h1 class="hero-title">
+            The <span>Bloomberg Terminal</span> for Premier League Sports Betting
+        </h1>
+        <p class="hero-subtitle">
+            Model custom match scenarios. Filter historical form, head-to-head encounters, and half-time goal distributions to generate instant empirical probabilities before placing bets.
+        </p>
+    </section>
+
+    <!-- Interactive Terminal Application -->
+    <section class="container" id="terminal">
+        <div class="terminal-app">
+            <div class="terminal-header">
+                <div class="terminal-title">
+                    <span>⚡ DATAWRANGLER.AI PROBABILITY ENGINE</span>
+                    <span style="color: var(--text-muted);">|</span>
+                    <span id="active-fixture-title" style="color: var(--accent-magenta);">MANCHESTER CITY vs CHELSEA</span>
+                </div>
+                <div class="live-status">
+                    <span class="live-dot"></span>
+                    <span>LIVE MODELING ACTIVE</span>
+                </div>
+            </div>
+
+            <div class="terminal-body">
+                <!-- Left Constraints Controls -->
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">Home Team</label>
+                        <select id="home-team-select" onchange="recalculateModel()">
+                            <option value="Manchester City" selected>Manchester City</option>
+                            <option value="Arsenal">Arsenal</option>
+                            <option value="Liverpool">Liverpool</option>
+                            <option value="Chelsea">Chelsea</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Away Team</label>
+                        <select id="away-team-select" onchange="recalculateModel()">
+                            <option value="Chelsea" selected>Chelsea</option>
+                            <option value="Arsenal">Arsenal</option>
+                            <option value="Liverpool">Liverpool</option>
+                            <option value="Manchester City">Manchester City</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Form Window Filter</label>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn active" id="form-5-btn" onclick="setFormWindow(5)">Last 5</button>
+                            <button class="toggle-btn" id="form-10-btn" onclick="setFormWindow(10)">Last 10</button>
+                            <button class="toggle-btn" id="form-38-btn" onclick="setFormWindow(38)">All Season</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Matchup Constraint</label>
+                        <div class="toggle-buttons" style="grid-template-columns: 1fr 1fr;">
+                            <button class="toggle-btn active" id="btn-all-games" onclick="setH2HOnly(false)">All Games</button>
+                            <button class="toggle-btn" id="btn-h2h-only" onclick="setH2HOnly(true)">H2H Only</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Live Calculated Empirical Probabilities -->
+                <div class="results-panel">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-over-05-ht">80%</div>
+                            <div class="metric-label">Over 0.5 HT Goals</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-over-15-ht">40%</div>
+                            <div class="metric-label">Over 1.5 HT Goals</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-btts-ht">40%</div>
+                            <div class="metric-label">BTTS in Half-Time</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-home-win-ht" style="color: var(--accent-purple);">60%</div>
+                            <div class="metric-label">HT Home Lead Prob</div>
+                        </div>
+                    </div>
+
+                    <!-- Matching Historical Sample Table -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Match Fixture</th>
+                                    <th>HT Score</th>
+                                    <th>FT Score</th>
+                                    <th>HT Goal Breakdown</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matches-table-body">
+                                <!-- Populated dynamically by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="pricing-card">
+                <h2>DataWrangler.AI Pro Access</h2>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Unlock the complete software terminal & scenario modeling engine.</p>
+                <div class="pricing-price">$29 <span style="font-size: 1rem; color: var(--text-muted);">/ month</span></div>
+                <button class="btn-primary" onclick="openAuthModal('register')" style="width: 100%; justify-content: center; padding: 0.85rem;">Subscribe & Launch Software</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- AUTH MODAL OVERLAY -->
+    <div class="auth-modal-overlay" id="auth-modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="auth-modal">
+            <!-- Modal Header -->
+            <div class="auth-modal-header">
+                <div class="auth-modal-title">
+                    <div class="logo-icon" style="width: 28px; height: 28px; font-size: 0.75rem;">DW</div>
+                    <span>DataWrangler.AI</span>
+                </div>
+                <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Log In</button>
+                <button class="auth-tab" id="tab-register-btn" onclick="switchAuthTab('register')">Create Account</button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <div class="auth-body">
+                <!-- LOG IN COMPONENT -->
+                <form class="auth-form" id="form-login" onsubmit="handleAuthSubmit(event, 'login')">
+                    <div class="auth-error-box" id="auth-error-login"></div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">Email Address</label>
+                        <input type="email" id="login-email" placeholder="quant@datawrangler.ai" required>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••••••" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary auth-submit-btn" id="login-submit-btn">Log In to Terminal</button>
+
+                    <p class="auth-switch-text">
+                        Don't have an account yet?
+                        <a class="auth-switch-link" onclick="switchAuthTab('register')">Create an Account</a>
+                    </p>
+                </form>
+
+                <!-- CREATE ACCOUNT COMPONENT -->
+                <form class="auth-form" id="form-register" style="display: none;" onsubmit="handleAuthSubmit(event, 'register')">
+                    <div class="auth-error-box" id="auth-error-register"></div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">Full Name</label>
+                        <input type="text" id="register-name" placeholder="Alex Rivers" required>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">Email Address</label>
+                        <input type="email" id="register-email" placeholder="quant@datawrangler.ai" required>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">Password</label>
+                        <input type="password" id="register-password" placeholder="Create a strong password" required minlength="8">
+                    </div>
+
+                    <button type="submit" class="btn-primary auth-submit-btn" id="register-submit-btn">Create Free Account & Launch</button>
+
+                    <p class="auth-switch-text">
+                        Already have an account?
+                        <a class="auth-switch-link" onclick="switchAuthTab('login')">Log In</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 DataWrangler.AI. All rights reserved. Quantitative sports software for modelers.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Modeling Terminal Logic -->
+    <script>
+        const fixtureDatabase = [
+            { date: "2024-05-19", home: "Manchester City", away: "West Ham", hthg: 2, htag: 1, fthg: 3, ftag: 1 },
+            { date: "2024-05-11", home: "Fulham", away: "Manchester City", hthg: 0, htag: 1, fthg: 0, ftag: 4 },
+            { date: "2024-05-04", home: "Manchester City", away: "Wolves", hthg: 3, htag: 0, fthg: 5, ftag: 1 },
+            { date: "2024-04-28", home: "Nottingham Forest", away: "Manchester City", hthg: 0, htag: 1, fthg: 0, ftag: 2 },
+            { date: "2024-04-25", home: "Brighton", away: "Manchester City", hthg: 0, htag: 3, fthg: 0, ftag: 4 },
+            { date: "2024-02-17", home: "Manchester City", away: "Chelsea", hthg: 0, htag: 1, fthg: 1, ftag: 1 },
+            { date: "2023-11-12", home: "Chelsea", away: "Manchester City", hthg: 2, htag: 2, fthg: 4, ftag: 4 },
+            { date: "2024-05-19", home: "Arsenal", away: "Everton", hthg: 1, htag: 1, fthg: 2, ftag: 1 },
+            { date: "2024-05-12", home: "Manchester United", away: "Arsenal", hthg: 0, htag: 1, fthg: 0, ftag: 1 },
+            { date: "2024-05-04", home: "Arsenal", away: "Bournemouth", hthg: 1, htag: 0, fthg: 3, ftag: 0 },
+            { date: "2024-04-28", home: "Tottenham", away: "Arsenal", hthg: 0, htag: 3, fthg: 2, ftag: 3 },
+            { date: "2024-04-23", home: "Arsenal", away: "Chelsea", hthg: 1, htag: 0, fthg: 5, ftag: 0 },
+            { date: "2023-10-21", home: "Chelsea", away: "Arsenal", hthg: 1, htag: 0, fthg: 2, ftag: 2 },
+            { date: "2024-05-05", home: "Liverpool", away: "Tottenham", hthg: 2, htag: 0, fthg: 4, ftag: 2 },
+            { date: "2024-04-27", home: "West Ham", away: "Liverpool", hthg: 1, htag: 0, fthg: 2, ftag: 2 }
+        ];
+
+        let selectedFormWindow = 5;
+        let isH2HOnly = false;
+
+        function setFormWindow(n) {
+            selectedFormWindow = n;
+            document.querySelectorAll('.toggle-buttons button').forEach(b => {
+                if (b.id.startsWith('form-')) b.classList.remove('active');
+            });
+            document.getElementById(`form-${n}-btn`).classList.add('active');
+            recalculateModel();
+        }
+
+        function setH2HOnly(h2hFlag) {
+            isH2HOnly = h2hFlag;
+            document.getElementById('btn-all-games').classList.toggle('active', !h2hFlag);
+            document.getElementById('btn-h2h-only').classList.toggle('active', h2hFlag);
+            recalculateModel();
+        }
+
+        function recalculateModel() {
+            const homeTeam = document.getElementById('home-team-select').value;
+            const awayTeam = document.getElementById('away-team-select').value;
+
+            document.getElementById('active-fixture-title').textContent = `${homeTeam.toUpperCase()} vs ${awayTeam.toUpperCase()}`;
+
+            let filtered = fixtureDatabase.filter(m => {
+                if (isH2HOnly) {
+                    return (m.home === homeTeam && m.away === awayTeam) || (m.home === awayTeam && m.away === homeTeam);
+                } else {
+                    return m.home === homeTeam || m.away === homeTeam || m.home === awayTeam || m.away === awayTeam;
+                }
+            });
+
+            filtered = filtered.slice(0, selectedFormWindow);
+            if (filtered.length === 0) filtered = fixtureDatabase.slice(0, 5);
+
+            const total = filtered.length;
+            const over05HT = filtered.filter(m => (m.hthg + m.htag) > 0).length;
+            const over15HT = filtered.filter(m => (m.hthg + m.htag) > 1).length;
+            const bttsHT = filtered.filter(m => m.hthg > 0 && m.htag > 0).length;
+            const homeLeadHT = filtered.filter(m => m.hthg > m.htag).length;
+
+            document.getElementById('metric-over-05-ht').textContent = Math.round((over05HT / total) * 100) + '%';
+            document.getElementById('metric-over-15-ht').textContent = Math.round((over15HT / total) * 100) + '%';
+            document.getElementById('metric-btts-ht').textContent = Math.round((bttsHT / total) * 100) + '%';
+            document.getElementById('metric-home-win-ht').textContent = Math.round((homeLeadHT / total) * 100) + '%';
+
+            const tbody = document.getElementById('matches-table-body');
+            tbody.innerHTML = '';
+            filtered.forEach(m => {
+                const totalHTGoals = m.hthg + m.htag;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${m.date}</td>
+                    <td>${m.home} vs ${m.away}</td>
+                    <td><span class="score-tag">${m.hthg} - ${m.htag}</span></td>
+                    <td>${m.fthg} - ${m.ftag}</td>
+                    <td style="color: ${totalHTGoals > 0 ? 'var(--accent-magenta)' : 'var(--text-muted)'}; font-family: var(--font-mono);">
+                        ${totalHTGoals > 0 ? `Over 0.5 HT (${totalHTGoals} Goals)` : '0 Goals in HT'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --------------------------------------------------------------------------
+        // AUTH MODAL & BACKEND API INTEGRATION
+        // --------------------------------------------------------------------------
+        function openAuthModal(defaultTab = 'login') {
+            switchAuthTab(defaultTab);
+            document.getElementById('auth-modal-overlay').classList.add('active');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal-overlay').classList.remove('active');
+            document.getElementById('auth-error-login').style.display = 'none';
+            document.getElementById('auth-error-register').style.display = 'none';
+        }
+
+        function handleOverlayClick(event) {
+            if (event.target.id === 'auth-modal-overlay') {
+                closeAuthModal();
+            }
+        }
+
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('tab-login-btn');
+            const registerBtn = document.getElementById('tab-register-btn');
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+
+            if (tab === 'login') {
+                loginBtn.classList.add('active');
+                registerBtn.classList.remove('active');
+                loginForm.style.display = 'flex';
+                registerForm.style.display = 'none';
+            } else {
+                registerBtn.classList.add('active');
+                loginBtn.classList.remove('active');
+                registerForm.style.display = 'flex';
+                loginForm.style.display = 'none';
+            }
+        }
+
+        async function handleAuthSubmit(event, action) {
+            event.preventDefault();
+            const errorEl = document.getElementById(`auth-error-${action}`);
+            const submitBtn = document.getElementById(`${action}-submit-btn`);
+            errorEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = action === 'login' ? 'Authenticating...' : 'Creating Account...';
+
+            let payload = {};
+            let endpoint = '';
+
+            if (action === 'login') {
+                endpoint = '/api/v1/auth/login';
+                payload = {
+                    email: document.getElementById('login-email').value,
+                    password: document.getElementById('login-password').value
+                };
+            } else {
+                endpoint = '/api/v1/auth/register';
+                payload = {
+                    full_name: document.getElementById('register-name').value,
+                    email: document.getElementById('register-email').value,
+                    password: document.getElementById('register-password').value
+                };
+            }
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    errorEl.textContent = data.detail || 'Authentication failed. Please check your details.';
+                    errorEl.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = action === 'login' ? 'Log In to Terminal' : 'Create Free Account & Launch';
+                    return;
+                }
+
+                // Redirect to protected dashboard upon successful authentication
+                window.location.href = '/dashboard';
+            } catch (err) {
+                errorEl.textContent = 'Server connection error. Please try again.';
+                errorEl.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = action === 'login' ? 'Log In to Terminal' : 'Create Free Account & Launch';
+            }
+        }
+
+        // Check if already authenticated on load
+        async function checkExistingSession() {
+            try {
+                const res = await fetch('/api/v1/auth/me');
+                if (res.ok) {
+                    // If already logged in, update header CTA button to point to dashboard (no auto-loop redirect)
+                    const launchBtn = document.getElementById('nav-launch-btn');
+                    if (launchBtn) {
+                        launchBtn.textContent = 'Go to Dashboard →';
+                        launchBtn.onclick = () => { window.location.href = '/dashboard'; };
+                    }
+                    const loginLink = document.getElementById('nav-login-link');
+                    if (loginLink) {
+                        loginLink.style.display = 'none';
+                    }
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            recalculateModel();
+            checkExistingSession();
+        });
+    </script>
+
+</body>
+
+</html>
