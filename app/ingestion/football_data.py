@@ -256,3 +256,17 @@ class FootballDataIngestor:
             f"Inserted={total_stats['inserted']}, Updated={total_stats['updated']}"
         )
         return total_stats
+
+if __name__ == "__main__":
+    import asyncio
+    from app.db.database import SessionLocal
+    
+    async def run_ingestion():
+        db = SessionLocal()
+        try:
+            ingestor = FootballDataIngestor()
+            await ingestor.ingest_all_historical_seasons(db)
+        finally:
+            db.close()
+            
+    asyncio.run(run_ingestion())
