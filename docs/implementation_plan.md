@@ -34,8 +34,8 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
       #### Section 2.1: Making UI modifications to the terminal workspace - league standings engine
       [x] Under the league standings Engine in the terminal workspace the matches played or P or GF or GA text color is exactly what should be used for the W text, D text and L text, please do not use Green, yellow or red for the W, D, and L text. 
       [x] For Table Perspective, I don't want icons next to overall, home or away, simply text is good enough. In General as a general rule of thumb, we should not be using icons unless otherwise specificed like the team badges. 
-      
-
+      #### Section 2.2: Making UI modifications to the dashboard - initializing matchday data
+      [x] In the same way we have League Standings Engine, Raw SQL Match Database, I want to create a new "tab" and this tab I want it to be tied to "Upcoming fixtures & 1-click quant matchups", in other words, I want to remove Upcoming Fixtures & 1-click quant matchups from Raw SQL Match Database terminal, and have an own tab for in depth matchday data.
 
 ### Phase 2: Configuration Engine & Database ORM Schema
 - [x] `app/core/config.py`: Environment configuration via Pydantic Settings (`DATABASE_URL`, `JWT_SECRET_KEY`).
@@ -85,6 +85,18 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
   - Added 4 Standing Rank Filter controls to Raw SQL filter bar: `Home Prev Finish`, `Away Prev Finish`, `Home Rank Going In`, `Away Rank Going In`.
 - [x] **Task 4.5.4: Clear All Filters Button**:
   - Added **`🧹 Clear All Filters`** button instantly resetting all 9 dropdowns, venue roles, and season presets back to baseline defaults.
+- [x] **Task 4.5.5: Correcting Last Season Standings, Pro**: 
+  - Under League Standings Engine, based on observation, I am seeing that the column prev season finish is incorrect. For example in Select Season 2026-2027 I see Arsenal is in 2nd place after 5 match days, and the prev season finish column says they finished 2nd, this is incorrect, because if you look at SELECT SEASON 2025-2026 you can clearly see Arsenal one the league the year prior. 
+  - Furthermore, team like leeds, newcastle, everton all have prev season finish columns that are greater than 20 - this is a great error, there are only 20 teams in the premier league, and it should be impossible for any team to have a prev season finish greater than 20. As a matter of fact, because 18-20 place are regulated per season, there should be no pre season finish greater or equal to 18, and there should be at least 3 teams that are tagged with PROMOTED FROM CHAMPIONSHIP or some other type of tag to identify they're new to the league. 
+  - In general this architecture needs to also be true for Championship and any other league in the future.
+  - I can see things things like teams getting relegated from EPL to Championship as an issue and getting promoted from EFL League One to Championship let's discuss this in great detail
+- [x] **Task 4.6 Raw SQL Match Database**: 
+  - [x] For the upcoming fixtures there are currently no fixtures being populated; we need the fixtures to adequately and correctly be populated for all leagues in the system regardless if we add more or remove leagues.
+  - [x] The current matchup or match up for the week should be dynamic and updating the second it renders to the upcomming matchweek.  For now lets remove rank going in and last season rank for simplicity. 
+- [x] **Task 4.7 Matchday mechanics**: 
+  - [x] Each Matchday card in Matchday Analytics, should needs to have the ability to get clicked. When the matchday card gets clicked, below the upcoming fixtures & 1-Click Quant Matchups, there should be a section that is very similar to the raw sql match database but with the matchday filters.  After the matchday card gets clicked, the screen should autmatically scroll down to the updated matchday filters database. 
+  - [x] At the very top of the matchday analytics, we should have a section that allows for some filters that dictate what is being shown in the matchday cards, similar to what we have in the raw sql database. An immediate thought for the filters are: (an exact vs overall switch - i'm not sure this is what we want to call it but basically we want to be able to toggle whether the home team needs to be home vs the away team that's playing away or if we're okay with home as away vs away as home as well), a second example of this is - Look back period - if we want the matches to be in the last 3 seasons, 5, 10 etc.  I want this to be an option as well; let's strategize on the different types of filters we should consider incorporating. 
+
 
 ### Phase 5: Security Hardening & Production Launch
 - [ ] Configure CORS middleware in `app/main.py` with explicit allowed origins.

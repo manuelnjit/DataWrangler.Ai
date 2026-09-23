@@ -16,7 +16,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.db.database import SessionLocal
-from app.models.matches import Match
+from app.models.matches import RawMatch
 
 logger = logging.getLogger("datawrangler.ingestion.universal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -192,15 +192,15 @@ class UniversalFixturesIngestor:
                 ftag = score.get("away")
 
             # Upsert into matches table
-            existing = self.db.query(Match).filter(
-                Match.league == league_name,
-                Match.season == season_str,
-                Match.home_team == home_team,
-                Match.away_team == away_team
+            existing = self.db.query(RawMatch).filter(
+                RawMatch.league == league_name,
+                RawMatch.season == season_str,
+                RawMatch.home_team == home_team,
+                RawMatch.away_team == away_team
             ).first()
 
             if not existing:
-                new_match = Match(
+                new_match = RawMatch(
                     league=league_name,
                     season=season_str,
                     match_date=match_date,

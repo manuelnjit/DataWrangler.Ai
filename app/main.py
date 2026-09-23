@@ -23,14 +23,6 @@ import app.models  # noqa: F401
 async def lifespan(app_instance: FastAPI):
     """Executes boot-time tasks (database table auto-creation) on server startup."""
     Base.metadata.create_all(bind=engine)
-    # Ensure 'league' column exists in matches table for multi-league support
-    from sqlalchemy import text
-    with engine.connect() as conn:
-        # Check existing columns
-        column_info = conn.execute(text("PRAGMA table_info(matches)")).fetchall()
-        if not any(col[1] == 'league' for col in column_info):
-            conn.execute(text("ALTER TABLE matches ADD COLUMN league VARCHAR(20) NOT NULL DEFAULT 'EPL'"))
-            conn.commit()
     yield
 
 

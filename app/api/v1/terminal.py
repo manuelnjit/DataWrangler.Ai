@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
 from app.db.database import get_db
-from app.models.matches import Match
+from app.models.matches import EnrichedMatch as Match
 from app.models.teams import Team
 from app.models.users import User
 from app.api.v1.auth import get_current_user_from_request
@@ -29,6 +29,8 @@ router = APIRouter(prefix="/terminal", tags=["Terminal Data & Modeling"])
 # In-Memory Cache for Final Season Standings to provide sub-millisecond prior season rank lookups
 _SEASON_STANDINGS_CACHE: Dict[Tuple[str, str], Dict[str, int]] = {}
 _MATCHDAY_STANDINGS_CACHE: Dict[Tuple[str, str], Dict[int, Dict[str, int]]] = {}
+
+# In-Memory Cache for Final Season Standings to provide sub-millisecond prior season rank lookups
 
 
 def get_season_final_ranks(db: Session, season_str: str, league: str) -> Dict[str, int]:
@@ -458,6 +460,76 @@ def get_upcoming_scheduled_fixtures(
     }
 
 
+@router.get("/matchday-history")
+def get_matchday_history(
+    team_a: str,
+    team_b: str,
+    exact: bool = False,
+    limit: str = "5",
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user_from_request)
+):
+    """
+    Retrieves historical head-to-head matches between two teams.
+    If exact=True, team_a must be home and team_b must be away.
+    If exact=False, returns all matches between the two regardless of venue.
+    limit can be an integer string or 'all'.
+    """
+    from sqlalchemy import or_, and_, desc
+    
+    query = db.query(Match).filter(Match.status == "COMPLETED")
+
+    if exact:
+        query = query.filter(
+            and_(Match.home_team == team_a, Match.away_team == team_b)
+        )
+    else:
+        query = query.filter(
+            or_(
+                and_(Match.home_team == team_a, Match.away_team == team_b),
+                and_(Match.home_team == team_b, Match.away_team == team_a)
+            )
+        )
+    
+    # Sort by most recent match date
+    query = query.order_by(desc(Match.match_date))
+    
+    if limit.lower() != "all":
+        try:
+            lim_val = int(limit)
+            query = query.limit(lim_val)
+        except ValueError:
+            pass
+
+    matches = query.all()
+
+    # Pre-fetch logos
+    all_teams_meta = db.query(Team).all()
+    logo_map = {t.name: t.logo_path for t in all_teams_meta}
+
+    results = []
+    for m in matches:
+        # Determine exact scores safely (just in case they are null)
+        h_score = m.fthg if m.fthg is not None else "N/A"
+        a_score = m.ftag if m.ftag is not None else "N/A"
+        ht_h_score = m.hthg if m.hthg is not None else "N/A"
+        ht_a_score = m.htag if m.htag is not None else "N/A"
+        
+        results.append({
+            "season": m.season,
+            "match_date": m.match_date,
+            "home_team": m.home_team,
+            "home_logo": logo_map.get(m.home_team) or "/static/images/crests/generic.png",
+            "away_team": m.away_team,
+            "away_logo": logo_map.get(m.away_team) or "/static/images/crests/generic.png",
+            "ht_score": f"{ht_h_score} - {ht_a_score}",
+            "ft_score": f"{h_score} - {a_score}"
+        })
+    
+    return {"matches": results}
+
+
+
 @router.get("/matches")
 def get_raw_matches_table(
     league: Optional[str] = None,
@@ -554,38 +626,35 @@ def get_raw_matches_table(
     all_teams_meta = db.query(Team).all()
     logo_map = {t.name: t.logo_path for t in all_teams_meta}
 
+    def format_status(status_str, rank):
+        if rank: return f"#{rank}"
+        if status_str == "STAYED": return "N/A"
+        if status_str == "PROMOTED_FROM_CHAMPIONSHIP": return "Promoted"
+        if status_str == "RELEGATED_FROM_EPL": return "Relegated"
+        return "Promoted"
+
     for m in all_matching_rows:
-        m_league = m.league or "EPL"
-        prev_s = get_previous_season_string(m.season)
-        prev_ranks = get_season_final_ranks(db, prev_s, m_league) if prev_s else {}
-        other_league = "Championship" if m_league == "EPL" else "EPL"
-        other_prev_ranks = get_season_final_ranks(db, prev_s, other_league) if prev_s else {}
+        # Construct UI strings directly from the pre-computed Enriched DB columns
 
-        h_prev_num = prev_ranks.get(m.home_team)
-        h_is_promoted = (prev_s is not None) and (m.home_team not in prev_ranks)
-        h_prev_rank_str = f"#{h_prev_num}" if h_prev_num else ("N/A" if not prev_s else ("Promoted" if m_league == "EPL" else ("Relegated" if m.home_team in other_prev_ranks else "Promoted")))
+        h_prev_rank_str = format_status(m.home_prev_league_status, m.home_prev_rank)
+        a_prev_rank_str = format_status(m.away_prev_league_status, m.away_prev_rank)
 
-        a_prev_num = prev_ranks.get(m.away_team)
-        a_is_promoted = (prev_s is not None) and (m.away_team not in prev_ranks)
-        a_prev_rank_str = f"#{a_prev_num}" if a_prev_num else ("N/A" if not prev_s else ("Promoted" if m_league == "EPL" else ("Relegated" if m.away_team in other_prev_ranks else "Promoted")))
+        h_pre_rank_str = f"#{m.home_pre_rank}" if m.home_pre_rank else "MD 1"
+        a_pre_rank_str = f"#{m.away_pre_rank}" if m.away_pre_rank else "MD 1"
 
-        # In-Season Standing Rank Going Into The Match
-        md_pre_map = get_matchday_pre_ranks(db, m.season, m.matchday or 1, m_league)
-        h_pre_num = md_pre_map.get(m.home_team)
-        h_pre_rank_str = f"#{h_pre_num}" if h_pre_num else "MD 1"
-
-        a_pre_num = md_pre_map.get(m.away_team)
-        a_pre_rank_str = f"#{a_pre_num}" if a_pre_num else "MD 1"
+        # Booleans for Rank Filter predicates
+        h_is_promoted = (m.home_prev_league_status != "STAYED" and m.home_prev_rank is None)
+        a_is_promoted = (m.away_prev_league_status != "STAYED" and m.away_prev_rank is None)
 
         # Apply Rank Filter predicates
         if has_rank_filters:
-            if not match_rank_filter(h_prev_num, h_is_promoted, home_prev_filter):
+            if not match_rank_filter(m.home_prev_rank, h_is_promoted, home_prev_filter):
                 continue
-            if not match_rank_filter(a_prev_num, a_is_promoted, away_prev_filter):
+            if not match_rank_filter(m.away_prev_rank, a_is_promoted, away_prev_filter):
                 continue
-            if not match_rank_filter(h_pre_num, False, home_pre_filter):
+            if not match_rank_filter(m.home_pre_rank, False, home_pre_filter):
                 continue
-            if not match_rank_filter(a_pre_num, False, away_pre_filter):
+            if not match_rank_filter(m.away_pre_rank, False, away_pre_filter):
                 continue
 
         filtered_rows.append(m)

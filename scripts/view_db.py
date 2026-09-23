@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from app.db.database import SessionLocal, engine
 from app.models.users import User
-from app.models.matches import Match
+from app.models.matches import RawMatch as Match
 from app.models.api_keys import APIKey
 from sqlalchemy import inspect
 

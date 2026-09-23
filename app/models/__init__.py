@@ -4,8 +4,8 @@ Exports all SQLAlchemy ORM models so they are registered with `Base.metadata`
 upon package import, enabling database schema generation (`Base.metadata.create_all`).
 """
 
-from app.models.matches import Match
+from app.models.matches import RawMatch, EnrichedMatch
 from app.models.users import User
 from app.models.api_keys import APIKey
 
-__all__ = ["Match", "User", "APIKey"]
+__all__ = ["RawMatch", "EnrichedMatch", "User", "APIKey"]

@@ -647,7 +647,8 @@
 
         <!-- Mode Selector Tabs -->
         <div class="view-tab-bar">
-            <button class="tab-btn active" id="tab-standings-btn" onclick="switchView('standings')">League Standings Engine</button>
+            <button class="tab-btn active" id="tab-matchday-btn" onclick="switchView('matchday')">Matchday Analytics</button>
+            <button class="tab-btn" id="tab-standings-btn" onclick="switchView('standings')">League Standings Engine</button>
             <button class="tab-btn" id="tab-rawsql-btn" onclick="switchView('rawsql')">Raw SQL Match Database (<span id="sql-rows-count">Loading...</span>)</button>
         </div>
 
@@ -658,7 +659,7 @@
                     <span>DATAWRANGLER.AI ANALYTICS ENGINE</span>
                     <span style="color: var(--text-muted);">|</span>
                     <span id="active-terminal-title" style="color: var(--accent-magenta); display: inline-flex; align-items: center; gap: 0.5rem;">
-                        PREMIER LEAGUE HISTORICAL STANDINGS
+                        PREMIER LEAGUE MATCHDAY ANALYTICS
                     </span>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -668,8 +669,88 @@
                 </div>
             </div>
 
-            <!-- VIEW 1: LEAGUE STANDINGS ENGINE MODE -->
-            <div class="terminal-body" id="view-standings">
+            </div>
+
+            <!-- VIEW 1: MATCHDAY ANALYTICS MODE -->
+            <div class="raw-sql-view active" id="view-matchday" style="display: flex;">
+
+                <!-- MATCHDAY GLOBAL FILTERS -->
+                <div class="sql-filter-bar" style="margin-bottom: 0;">
+                    <div style="display: flex; gap: 1.5rem; width: 100%; align-items: center; flex-wrap: wrap;">
+                        <div class="control-group" style="min-width: 200px;">
+                            <label>MATCHUP CONTEXT</label>
+                            <select id="matchday-context-filter" onchange="refreshMatchdayDeepDive()">
+                                <option value="exact">Exact (Home vs Away)</option>
+                                <option value="overall">Overall (Any Venue)</option>
+                            </select>
+                        </div>
+                        <div class="control-group" style="min-width: 200px;">
+                            <label>LOOK-BACK PERIOD</label>
+                            <select id="matchday-lookback-filter" onchange="refreshMatchdayDeepDive()">
+                                <option value="5">Last 5 Matches</option>
+                                <option value="3">Last 3 Matches</option>
+                                <option value="10">Last 10 Matches</option>
+                                <option value="20">Last 20 Matches</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div style="flex-grow: 1;"></div>
+                        <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">GLOBAL MATCHDAY FILTERS</span>
+                    </div>
+                </div>
+
+                <!-- UPCOMING FIXTURES & 1-CLICK QUANT MATCHUP DRAWER -->
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">UPCOMING FIXTURES & 1-CLICK QUANT MATCHUPS</span>
+                            <span class="matchday-pill" id="upcoming-md-pill">MD 1 (Next Up)</span>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SELECT MATCHDAY:</label>
+                            <select id="upcoming-matchday-select" onchange="fetchUpcomingFixtures()" style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;"></select>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Fixtures Cards Grid -->
+                    <div id="upcoming-fixtures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+                        <!-- Dynamic Upcoming Match Cards -->
+                    </div>
+                </div>
+
+                <!-- MATCHDAY DEEP DIVE SECTION (Hidden by default) -->
+                <div id="matchday-deep-dive" style="display: none; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #4ade80;">MATCHDAY DEEP DIVE: HISTORICAL H2H</span>
+                            <span class="matchday-pill" id="deep-dive-matchup-pill">Team A vs Team B</span>
+                        </div>
+                    </div>
+
+                    <!-- Basic Table Container -->
+                    <div class="terminal-table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="terminal-table">
+                            <thead>
+                                <tr>
+                                    <th>SEASON</th>
+                                    <th>MATCH DATE</th>
+                                    <th>HOME TEAM</th>
+                                    <th>AWAY TEAM</th>
+                                    <th>HT SCORE</th>
+                                    <th>FT SCORE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchday-deep-dive-tbody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: LEAGUE STANDINGS ENGINE MODE -->
+            <div class="terminal-body" id="view-standings" style="display: none;">
                 <div class="sql-filter-bar">
                     <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1.5fr 1fr; gap: 1rem; width: 100%; align-items: center;">
                         <div class="control-group">
@@ -734,28 +815,8 @@
                 </div>
             </div>
 
-            <!-- VIEW 2: RAW SQL DATABASE TABLE VIEW -->
+            <!-- VIEW 3: RAW SQL DATABASE TABLE VIEW -->
             <div class="raw-sql-view" id="view-rawsql">
-
-                <!-- UPCOMING FIXTURES & 1-CLICK QUANT MATCHUP DRAWER -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">UPCOMING FIXTURES & 1-CLICK QUANT MATCHUPS</span>
-                            <span class="matchday-pill" id="upcoming-md-pill">MD 1 (Next Up)</span>
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SELECT MATCHDAY:</label>
-                            <select id="upcoming-matchday-select" onchange="fetchUpcomingFixtures()" style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;"></select>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming Fixtures Cards Grid -->
-                    <div id="upcoming-fixtures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
-                        <!-- Dynamic Upcoming Match Cards -->
-                    </div>
-                </div>
 
                 <!-- Dynamic Interactive Widget Dashboard for Empirical Statistics -->
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
@@ -1093,11 +1154,22 @@
 
         async function onLeagueChange() {
             const standingsTab = document.getElementById('tab-standings-btn');
-            const isStandings = standingsTab.classList.contains('active');
-            switchView(isStandings ? 'standings' : 'rawsql');
+            const matchdayTab = document.getElementById('tab-matchday-btn');
+            let mode = 'rawsql';
+            if (standingsTab.classList.contains('active')) mode = 'standings';
+            if (matchdayTab.classList.contains('active')) mode = 'matchday';
+            switchView(mode);
 
             populateMatchdayFilters();
+            
             await loadTeamsAndSeasons();
+
+            // Explicitly reset dropdown values to prevent browser retention using selectedIndex
+            // Placed AFTER loadTeamsAndSeasons to defeat Chrome's async form restoration
+            document.getElementById('upcoming-matchday-select').selectedIndex = 0;
+            document.getElementById('sql-matchday-filter').selectedIndex = 0;
+            document.getElementById('standings-matchday-select').selectedIndex = 0;
+            
             await fetchUpcomingFixtures();
             await fetchStandingsTable();
             await resetAndFetchSQLTable();
@@ -1213,6 +1285,8 @@
                 data.matches.forEach(m => {
                     const card = document.createElement('div');
                     card.className = 'upcoming-fixture-card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => loadMatchdayDetails(m.home_team, m.away_team);
 
                     let scoreHtml = '';
                     if (m.status === 'COMPLETED') {
@@ -1970,8 +2044,10 @@
         }
 
         function switchView(mode) {
+            const matchdayTab = document.getElementById('tab-matchday-btn');
             const standingsTab = document.getElementById('tab-standings-btn');
             const rawsqlTab = document.getElementById('tab-rawsql-btn');
+            const matchdayView = document.getElementById('view-matchday');
             const standingsView = document.getElementById('view-standings');
             const rawsqlView = document.getElementById('view-rawsql');
 
@@ -1980,18 +2056,86 @@
                 (leagueSelect.value === 'EPL' ? 'PREMIER LEAGUE' : leagueSelect.value.toUpperCase()) 
                 : 'PREMIER LEAGUE';
 
-            if (mode === 'standings') {
+            // Reset all
+            matchdayTab.classList.remove('active');
+            standingsTab.classList.remove('active');
+            rawsqlTab.classList.remove('active');
+            matchdayView.style.display = 'none';
+            matchdayView.classList.remove('active');
+            standingsView.style.display = 'none';
+            rawsqlView.classList.remove('active');
+
+            if (mode === 'matchday') {
+                matchdayTab.classList.add('active');
+                matchdayView.style.display = 'flex';
+                matchdayView.classList.add('active');
+                document.getElementById('active-terminal-title').textContent = `${league} MATCHDAY ANALYTICS`;
+                // Fetch data if needed
+                fetchUpcomingFixtures();
+            } else if (mode === 'standings') {
                 standingsTab.classList.add('active');
-                rawsqlTab.classList.remove('active');
                 standingsView.style.display = 'flex';
-                rawsqlView.classList.remove('active');
                 document.getElementById('active-terminal-title').textContent = `${league} HISTORICAL STANDINGS`;
             } else {
-                standingsTab.classList.remove('active');
                 rawsqlTab.classList.add('active');
-                standingsView.style.display = 'none';
                 rawsqlView.classList.add('active');
                 document.getElementById('active-terminal-title').textContent = 'RAW SQL MATCH DATABASE TERMINAL';
+            }
+        }
+
+        let currentDeepDiveMatchup = null;
+
+        async function loadMatchdayDetails(homeTeam, awayTeam) {
+            currentDeepDiveMatchup = { home: homeTeam, away: awayTeam };
+            
+            // Set pill text
+            const pill = document.getElementById('deep-dive-matchup-pill');
+            pill.textContent = `${homeTeam} vs ${awayTeam}`;
+            
+            // Show container and scroll to it
+            const deepDiveContainer = document.getElementById('matchday-deep-dive');
+            deepDiveContainer.style.display = 'flex';
+            deepDiveContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            await refreshMatchdayDeepDive();
+        }
+
+        async function refreshMatchdayDeepDive() {
+            if (!currentDeepDiveMatchup) return;
+
+            const contextFilter = document.getElementById('matchday-context-filter').value;
+            const lookbackFilter = document.getElementById('matchday-lookback-filter').value;
+            const isExact = contextFilter === 'exact';
+            
+            const url = `/api/v1/terminal/matchday-history?team_a=${encodeURIComponent(currentDeepDiveMatchup.home)}&team_b=${encodeURIComponent(currentDeepDiveMatchup.away)}&exact=${isExact}&limit=${lookbackFilter}`;
+            
+            try {
+                const tbody = document.getElementById('matchday-deep-dive-tbody');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1rem;">Loading...</td></tr>';
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                tbody.innerHTML = '';
+                if (!data.matches || data.matches.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1rem;">No historical matches found for these filters.</td></tr>';
+                    return;
+                }
+
+                data.matches.forEach(m => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${m.season}</td>
+                        <td>${m.match_date}</td>
+                        <td style="font-weight: ${m.home_team === currentDeepDiveMatchup.home ? 'bold' : 'normal'}">${getTeamBadgeHTML(m.home_team, m.home_logo)}</td>
+                        <td style="font-weight: ${m.away_team === currentDeepDiveMatchup.away ? 'bold' : 'normal'}">${getTeamBadgeHTML(m.away_team, m.away_logo)}</td>
+                        <td style="font-family: var(--font-mono);">${m.ht_score}</td>
+                        <td style="font-family: var(--font-mono); color: var(--accent-magenta); font-weight: bold;">${m.ft_score}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error("Failed to load matchday deep dive", e);
             }
         }
 
