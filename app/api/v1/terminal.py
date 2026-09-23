@@ -460,6 +460,105 @@ def get_upcoming_scheduled_fixtures(
     }
 
 
+
+def calculate_team_centric_stats(matches: list, t1_name: str, t2_name: str) -> dict:
+    """Calculates team-centric over/under probabilities strictly using team names."""
+    total_count = len(matches)
+    if total_count == 0:
+        empty = {
+            "t1_win": "0%", "draw": "0%", "t2_win": "0%", "btts": "0%",
+            "total_over0_5": "0%", "total_over1_5": "0%", "total_over2_5": "0%", "total_over3_5": "0%",
+            "total_under0_5": "0%", "total_under1_5": "0%", "total_under2_5": "0%", "total_under3_5": "0%",
+            "t1_over0_5": "0%", "t1_over1_5": "0%", "t1_over2_5": "0%", "t1_over3_5": "0%",
+            "t1_under0_5": "0%", "t1_under1_5": "0%", "t1_under2_5": "0%", "t1_under3_5": "0%",
+            "t2_over0_5": "0%", "t2_over1_5": "0%", "t2_over2_5": "0%", "t2_over3_5": "0%",
+            "t2_under0_5": "0%", "t2_under1_5": "0%", "t2_under2_5": "0%", "t2_under3_5": "0%",
+        }
+        return {"ht": empty, "ft": empty}
+
+    def calc_metrics(period_prefix: str):
+        t1_win_count = 0
+        draw_count = 0
+        t2_win_count = 0
+        btts_count = 0
+        
+        t_over = [0, 0, 0, 0]
+        t_under = [0, 0, 0, 0]
+        t1_over = [0, 0, 0, 0]
+        t1_under = [0, 0, 0, 0]
+        t2_over = [0, 0, 0, 0]
+        t2_under = [0, 0, 0, 0]
+
+        for m in matches:
+            # Safely handle dict vs ORM object
+            is_dict = isinstance(m, dict)
+            
+            home_team = m["home_team"] if is_dict else m.home_team
+            away_team = m["away_team"] if is_dict else m.away_team
+            
+            hg = m[f"{period_prefix}hg"] if is_dict else getattr(m, f"{period_prefix}hg")
+            ag = m[f"{period_prefix}ag"] if is_dict else getattr(m, f"{period_prefix}ag")
+            
+            hg = hg or 0
+            ag = ag or 0
+            
+            # Identify T1 goals
+            if home_team == t1_name:
+                t1_g = hg
+            elif away_team == t1_name:
+                t1_g = ag
+            else:
+                t1_g = hg # Fallback to Home if T1 not explicitly in match (e.g. ALL mode)
+                
+            # Identify T2 goals
+            if home_team == t2_name:
+                t2_g = hg
+            elif away_team == t2_name:
+                t2_g = ag
+            else:
+                t2_g = ag # Fallback to Away if T2 not explicitly in match
+
+            # Outcomes
+            if t1_g > t2_g: t1_win_count += 1
+            elif t1_g == t2_g: draw_count += 1
+            else: t2_win_count += 1
+            
+            if t1_g > 0 and t2_g > 0: btts_count += 1
+            
+            total_g = t1_g + t2_g
+            
+            # Over/Under Counts
+            for i, threshold in enumerate([0.5, 1.5, 2.5, 3.5]):
+                if total_g > threshold: t_over[i] += 1
+                else: t_under[i] += 1
+                
+                if t1_g > threshold: t1_over[i] += 1
+                else: t1_under[i] += 1
+                
+                if t2_g > threshold: t2_over[i] += 1
+                else: t2_under[i] += 1
+
+        def pct(count): return f"{round((count / total_count) * 100, 1)}%"
+
+        return {
+            "t1_win": pct(t1_win_count),
+            "draw": pct(draw_count),
+            "t2_win": pct(t2_win_count),
+            "btts": pct(btts_count),
+            "total_over0_5": pct(t_over[0]), "total_over1_5": pct(t_over[1]), "total_over2_5": pct(t_over[2]), "total_over3_5": pct(t_over[3]),
+            "total_under0_5": pct(t_under[0]), "total_under1_5": pct(t_under[1]), "total_under2_5": pct(t_under[2]), "total_under3_5": pct(t_under[3]),
+            "t1_over0_5": pct(t1_over[0]), "t1_over1_5": pct(t1_over[1]), "t1_over2_5": pct(t1_over[2]), "t1_over3_5": pct(t1_over[3]),
+            "t1_under0_5": pct(t1_under[0]), "t1_under1_5": pct(t1_under[1]), "t1_under2_5": pct(t1_under[2]), "t1_under3_5": pct(t1_under[3]),
+            "t2_over0_5": pct(t2_over[0]), "t2_over1_5": pct(t2_over[1]), "t2_over2_5": pct(t2_over[2]), "t2_over3_5": pct(t2_over[3]),
+            "t2_under0_5": pct(t2_under[0]), "t2_under1_5": pct(t2_under[1]), "t2_under2_5": pct(t2_under[2]), "t2_under3_5": pct(t2_under[3]),
+        }
+
+    return {
+        "ht": calc_metrics("ht"),
+        "ft": calc_metrics("ft")
+    }
+
+
 @router.get("/matchday-history")
 def get_matchday_history(
     team_a: str,
@@ -523,10 +622,17 @@ def get_matchday_history(
             "away_team": m.away_team,
             "away_logo": logo_map.get(m.away_team) or "/static/images/crests/generic.png",
             "ht_score": f"{ht_h_score} - {ht_a_score}",
-            "ft_score": f"{h_score} - {a_score}"
+            "ft_score": f"{h_score} - {a_score}",
+            "fthg": m.fthg,
+            "ftag": m.ftag,
+            "ftr": m.ftr,
+            "hthg": m.hthg,
+            "htag": m.htag,
+            "htr": m.htr
         })
-    
-    return {"matches": results}
+    # Use Team-Centric Math Engine
+    stats = calculate_team_centric_stats(results, team_a, team_b)
+    return {"matches": results, "stats": stats}
 
 
 
@@ -679,100 +785,11 @@ def get_raw_matches_table(
             "ftr": m.ftr,
         })
 
-    total_count = len(filtered_rows)
-
-    # Calculate Empirical HT and FT Statistics across filtered rows
-    if total_count > 0:
-        # 1. Half-Time (HT) Outcomes
-        ht_home = sum(1 for m in filtered_rows if (m.hthg or 0) > (m.htag or 0))
-        ht_draw = sum(1 for m in filtered_rows if (m.hthg or 0) == (m.htag or 0))
-        ht_away = sum(1 for m in filtered_rows if (m.htag or 0) > (m.hthg or 0))
-        ht_btts = sum(1 for m in filtered_rows if (m.hthg or 0) > 0 and (m.htag or 0) > 0)
-
-        ht_g0 = sum(1 for m in filtered_rows if ((m.hthg or 0) + (m.htag or 0)) == 0)
-        ht_g1 = sum(1 for m in filtered_rows if ((m.hthg or 0) + (m.htag or 0)) == 1)
-        ht_g2 = sum(1 for m in filtered_rows if ((m.hthg or 0) + (m.htag or 0)) == 2)
-        ht_g3plus = sum(1 for m in filtered_rows if ((m.hthg or 0) + (m.htag or 0)) >= 3)
-
-        ht_home_g0 = sum(1 for m in filtered_rows if (m.hthg or 0) == 0)
-        ht_home_g1 = sum(1 for m in filtered_rows if (m.hthg or 0) == 1)
-        ht_home_g2 = sum(1 for m in filtered_rows if (m.hthg or 0) == 2)
-        ht_home_g3plus = sum(1 for m in filtered_rows if (m.hthg or 0) >= 3)
-
-        ht_away_g0 = sum(1 for m in filtered_rows if (m.htag or 0) == 0)
-        ht_away_g1 = sum(1 for m in filtered_rows if (m.htag or 0) == 1)
-        ht_away_g2 = sum(1 for m in filtered_rows if (m.htag or 0) == 2)
-        ht_away_g3plus = sum(1 for m in filtered_rows if (m.htag or 0) >= 3)
-
-        # 2. Full-Time (FT) Outcomes
-        ft_home = sum(1 for m in filtered_rows if (m.fthg or 0) > (m.ftag or 0))
-        ft_draw = sum(1 for m in filtered_rows if (m.fthg or 0) == (m.ftag or 0))
-        ft_away = sum(1 for m in filtered_rows if (m.ftag or 0) > (m.fthg or 0))
-        ft_btts = sum(1 for m in filtered_rows if (m.fthg or 0) > 0 and (m.ftag or 0) > 0)
-
-        ft_g0 = sum(1 for m in filtered_rows if ((m.fthg or 0) + (m.ftag or 0)) == 0)
-        ft_g1 = sum(1 for m in filtered_rows if ((m.fthg or 0) + (m.ftag or 0)) == 1)
-        ft_g2 = sum(1 for m in filtered_rows if ((m.fthg or 0) + (m.ftag or 0)) == 2)
-        ft_g3plus = sum(1 for m in filtered_rows if ((m.fthg or 0) + (m.ftag or 0)) >= 3)
-
-        ft_home_g0 = sum(1 for m in filtered_rows if (m.fthg or 0) == 0)
-        ft_home_g1 = sum(1 for m in filtered_rows if (m.fthg or 0) == 1)
-        ft_home_g2 = sum(1 for m in filtered_rows if (m.fthg or 0) == 2)
-        ft_home_g3plus = sum(1 for m in filtered_rows if (m.fthg or 0) >= 3)
-
-        ft_away_g0 = sum(1 for m in filtered_rows if (m.ftag or 0) == 0)
-        ft_away_g1 = sum(1 for m in filtered_rows if (m.ftag or 0) == 1)
-        ft_away_g2 = sum(1 for m in filtered_rows if (m.ftag or 0) == 2)
-        ft_away_g3plus = sum(1 for m in filtered_rows if (m.ftag or 0) >= 3)
-
-        stats = {
-            "ht": {
-                "home_win": f"{round((ht_home / total_count) * 100, 1)}%",
-                "draw": f"{round((ht_draw / total_count) * 100, 1)}%",
-                "away_win": f"{round((ht_away / total_count) * 100, 1)}%",
-                "btts": f"{round((ht_btts / total_count) * 100, 1)}%",
-                "g0": f"{round((ht_g0 / total_count) * 100, 1)}%",
-                "g1": f"{round((ht_g1 / total_count) * 100, 1)}%",
-                "g2": f"{round((ht_g2 / total_count) * 100, 1)}%",
-                "g3plus": f"{round((ht_g3plus / total_count) * 100, 1)}%",
-                "home_g0": f"{round((ht_home_g0 / total_count) * 100, 1)}%",
-                "home_g1": f"{round((ht_home_g1 / total_count) * 100, 1)}%",
-                "home_g2": f"{round((ht_home_g2 / total_count) * 100, 1)}%",
-                "home_g3plus": f"{round((ht_home_g3plus / total_count) * 100, 1)}%",
-                "away_g0": f"{round((ht_away_g0 / total_count) * 100, 1)}%",
-                "away_g1": f"{round((ht_away_g1 / total_count) * 100, 1)}%",
-                "away_g2": f"{round((ht_away_g2 / total_count) * 100, 1)}%",
-                "away_g3plus": f"{round((ht_away_g3plus / total_count) * 100, 1)}%",
-            },
-            "ft": {
-                "home_win": f"{round((ft_home / total_count) * 100, 1)}%",
-                "draw": f"{round((ft_draw / total_count) * 100, 1)}%",
-                "away_win": f"{round((ft_away / total_count) * 100, 1)}%",
-                "btts": f"{round((ft_btts / total_count) * 100, 1)}%",
-                "g0": f"{round((ft_g0 / total_count) * 100, 1)}%",
-                "g1": f"{round((ft_g1 / total_count) * 100, 1)}%",
-                "g2": f"{round((ft_g2 / total_count) * 100, 1)}%",
-                "g3plus": f"{round((ft_g3plus / total_count) * 100, 1)}%",
-                "home_g0": f"{round((ft_home_g0 / total_count) * 100, 1)}%",
-                "home_g1": f"{round((ft_home_g1 / total_count) * 100, 1)}%",
-                "home_g2": f"{round((ft_home_g2 / total_count) * 100, 1)}%",
-                "home_g3plus": f"{round((ft_home_g3plus / total_count) * 100, 1)}%",
-                "away_g0": f"{round((ft_away_g0 / total_count) * 100, 1)}%",
-                "away_g1": f"{round((ft_away_g1 / total_count) * 100, 1)}%",
-                "away_g2": f"{round((ft_away_g2 / total_count) * 100, 1)}%",
-                "away_g3plus": f"{round((ft_away_g3plus / total_count) * 100, 1)}%",
-            },
-        }
-    else:
-        empty = {
-            "home_win": "0%", "draw": "0%", "away_win": "0%", "btts": "0%",
-            "g0": "0%", "g1": "0%", "g2": "0%", "g3plus": "0%",
-            "home_g0": "0%", "home_g1": "0%", "home_g2": "0%", "home_g3plus": "0%",
-            "away_g0": "0%", "away_g1": "0%", "away_g2": "0%", "away_g3plus": "0%",
-        }
-        stats = {"ht": empty, "ft": empty}
+    # Use Team-Centric Math Engine
+    stats = calculate_team_centric_stats(filtered_rows, team1 or "ALL", team2 or "ALL")
 
     # Paginated slice for the table view
+    total_count = len(filtered_rows)
     paginated_results = enriched_match_data[offset : offset + limit]
 
     return {

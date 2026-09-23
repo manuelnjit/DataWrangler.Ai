@@ -37,6 +37,27 @@
             box-sizing: border-box;
         }
 
+        /* Custom Scrollbar for DataWrangler.AI Aesthetic */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+            border: 3px solid var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-magenta);
+            border-color: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
         body {
             font-family: var(--font-sans);
             background-color: var(--bg-primary);
@@ -200,7 +221,7 @@
             background: var(--bg-card);
             color: var(--text-primary);
             border-color: var(--border-color);
-            box-shadow: 0 0 12px rgba(0,0,0,0.3);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
         }
 
         .tab-btn.active span {
@@ -241,7 +262,7 @@
             height: 22px;
             object-fit: contain;
             vertical-align: middle;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
         }
 
         .badge-fallback {
@@ -271,7 +292,7 @@
             flex-direction: column;
             gap: 0.35rem;
         }
-        
+
         .upcoming-fixture-card .team-badge {
             width: 20px;
             height: 20px;
@@ -366,7 +387,8 @@
             color: var(--text-muted);
         }
 
-        select, input {
+        select,
+        input {
             width: 100%;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
@@ -637,7 +659,8 @@
         <div class="workspace-header">
             <div>
                 <h1 class="workspace-title">Sports Modeling Terminal Workspace</h1>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Empirical scenario probabilities & live SQL database match records for Premier League HT/FT outcomes.</p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Empirical scenario probabilities & live SQL
+                    database match records for Premier League HT/FT outcomes.</p>
             </div>
             <div class="status-pill">
                 <span class="status-dot"></span>
@@ -647,9 +670,12 @@
 
         <!-- Mode Selector Tabs -->
         <div class="view-tab-bar">
-            <button class="tab-btn active" id="tab-matchday-btn" onclick="switchView('matchday')">Matchday Analytics</button>
-            <button class="tab-btn" id="tab-standings-btn" onclick="switchView('standings')">League Standings Engine</button>
-            <button class="tab-btn" id="tab-rawsql-btn" onclick="switchView('rawsql')">Raw SQL Match Database (<span id="sql-rows-count">Loading...</span>)</button>
+            <button class="tab-btn active" id="tab-matchday-btn" onclick="switchView('matchday')">Matchday
+                Analytics</button>
+            <button class="tab-btn" id="tab-standings-btn" onclick="switchView('standings')">League Standings
+                Engine</button>
+            <button class="tab-btn" id="tab-rawsql-btn" onclick="switchView('rawsql')">Raw SQL Match Database (<span
+                    id="sql-rows-count">Loading...</span>)</button>
         </div>
 
         <!-- Terminal App Container -->
@@ -658,359 +684,465 @@
                 <div class="terminal-title">
                     <span>DATAWRANGLER.AI ANALYTICS ENGINE</span>
                     <span style="color: var(--text-muted);">|</span>
-                    <span id="active-terminal-title" style="color: var(--accent-magenta); display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span id="active-terminal-title"
+                        style="color: var(--accent-magenta); display: inline-flex; align-items: center; gap: 0.5rem;">
                         PREMIER LEAGUE MATCHDAY ANALYTICS
                     </span>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <select id="global-league-select" onchange="onLeagueChange()" style="background: var(--bg-primary); color: white; border: 1px solid var(--border-color); padding: 5px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">
+                    <select id="global-league-select" onchange="onLeagueChange()"
+                        style="background: var(--bg-primary); color: white; border: 1px solid var(--border-color); padding: 5px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">
                     </select>
-                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">33-SEASON HISTORICAL DATABASE</span>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">33-SEASON
+                        HISTORICAL DATABASE</span>
                 </div>
             </div>
 
+        </div>
+
+        <!-- VIEW 1: MATCHDAY ANALYTICS MODE -->
+        <div class="raw-sql-view active" id="view-matchday" style="display: flex;">
+
+            <!-- GLOBAL MATCHDAY FILTERS (Moved to Deep Dive Header) -->
+
+            <!-- UPCOMING FIXTURES & 1-CLICK QUANT MATCHUP DRAWER -->
+            <div
+                style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">UPCOMING
+                            FIXTURES & 1-CLICK QUANT MATCHUPS</span>
+                        <span class="matchday-pill" id="upcoming-md-pill">MD 1 (Next Up)</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SELECT
+                            MATCHDAY:</label>
+                        <select id="upcoming-matchday-select" onchange="fetchUpcomingFixtures()"
+                            style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;"></select>
+                    </div>
+                </div>
+
+                <!-- Upcoming Fixtures Cards Grid -->
+                <div id="upcoming-fixtures-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+                    <!-- Dynamic Upcoming Match Cards -->
+                </div>
             </div>
 
-            <!-- VIEW 1: MATCHDAY ANALYTICS MODE -->
-            <div class="raw-sql-view active" id="view-matchday" style="display: flex;">
+            <!-- MATCHDAY PROBABILITY WIDGET DASHBOARD (Hidden by default) -->
+            <div id="md-probability-widget-container"
+                style="display: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--accent-magenta);">INTERACTIVE
+                            PROBABILITY WIDGET DASHBOARD</span>
+                    </div>
 
-                <!-- MATCHDAY GLOBAL FILTERS -->
-                <div class="sql-filter-bar" style="margin-bottom: 0;">
-                    <div style="display: flex; gap: 1.5rem; width: 100%; align-items: center; flex-wrap: wrap;">
-                        <div class="control-group" style="min-width: 200px;">
-                            <label>MATCHUP CONTEXT</label>
-                            <select id="matchday-context-filter" onchange="refreshMatchdayDeepDive()">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <!-- Add Widget Dropdown -->
+                        <select id="md-add-widget-select" onchange="addMatchdayWidgetFromDropdown()"
+                            style="width: 210px; padding: 0.4rem 0.65rem; font-size: 0.8rem;">
+                            <option value="">+ Add Metric Widget...</option>
+                        </select>
+
+                        <!-- HT vs FT Switcher Toggle -->
+                        <div class="toggle-buttons" style="grid-template-columns: 1fr 1fr; width: 260px;">
+                            <button class="toggle-btn active" id="md-stat-toggle-ht-btn"
+                                onclick="setMatchdayStatsMode('ht')">Half-Time</button>
+                            <button class="toggle-btn" id="md-stat-toggle-ft-btn"
+                                onclick="setMatchdayStatsMode('ft')">Full-Time</button>
+                        </div>
+
+                        <button class="btn-outline" onclick="resetMatchdayDefaultWidgets()"
+                            style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
+                            Reset Default 12
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Draggable Interactive Widget Grid -->
+                <div id="md-interactive-widget-grid" class="metrics-grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.75rem;">
+                    <!-- Widgets dynamically injected here -->
+                </div>
+            </div>
+
+            <!-- MATCHDAY DEEP DIVE SECTION (Hidden by default) -->
+            <div id="matchday-deep-dive"
+                style="display: none; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; flex-direction: column; gap: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #4ade80;">MATCHDAY
+                            DEEP DIVE: HISTORICAL H2H</span>
+                        <span class="matchday-pill" id="deep-dive-matchup-pill">Team A vs Team B</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label
+                                style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">CONTEXT:</label>
+                            <select id="matchday-context-filter" onchange="refreshMatchdayDeepDive()"
+                                style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
                                 <option value="exact">Exact (Home vs Away)</option>
                                 <option value="overall">Overall (Any Venue)</option>
                             </select>
                         </div>
-                        <div class="control-group" style="min-width: 200px;">
-                            <label>LOOK-BACK PERIOD</label>
-                            <select id="matchday-lookback-filter" onchange="refreshMatchdayDeepDive()">
-                                <option value="5">Last 5 Matches</option>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label
+                                style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">LOOK-BACK:</label>
+                            <select id="matchday-lookback-filter" onchange="refreshMatchdayDeepDive()"
+                                style="width: 130px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
                                 <option value="3">Last 3 Matches</option>
+                                <option value="5" selected>Last 5 Matches</option>
                                 <option value="10">Last 10 Matches</option>
                                 <option value="20">Last 20 Matches</option>
                                 <option value="all">All Time</option>
                             </select>
                         </div>
-                        <div style="flex-grow: 1;"></div>
-                        <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">GLOBAL MATCHDAY FILTERS</span>
                     </div>
                 </div>
 
-                <!-- UPCOMING FIXTURES & 1-CLICK QUANT MATCHUP DRAWER -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">UPCOMING FIXTURES & 1-CLICK QUANT MATCHUPS</span>
-                            <span class="matchday-pill" id="upcoming-md-pill">MD 1 (Next Up)</span>
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SELECT MATCHDAY:</label>
-                            <select id="upcoming-matchday-select" onchange="fetchUpcomingFixtures()" style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;"></select>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming Fixtures Cards Grid -->
-                    <div id="upcoming-fixtures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
-                        <!-- Dynamic Upcoming Match Cards -->
-                    </div>
-                </div>
-
-                <!-- MATCHDAY DEEP DIVE SECTION (Hidden by default) -->
-                <div id="matchday-deep-dive" style="display: none; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #4ade80;">MATCHDAY DEEP DIVE: HISTORICAL H2H</span>
-                            <span class="matchday-pill" id="deep-dive-matchup-pill">Team A vs Team B</span>
-                        </div>
-                    </div>
-
-                    <!-- Basic Table Container -->
-                    <div class="terminal-table-container" style="max-height: 400px; overflow-y: auto;">
-                        <table class="terminal-table">
-                            <thead>
-                                <tr>
-                                    <th>SEASON</th>
-                                    <th>MATCH DATE</th>
-                                    <th>HOME TEAM</th>
-                                    <th>AWAY TEAM</th>
-                                    <th>HT SCORE</th>
-                                    <th>FT SCORE</th>
-                                </tr>
-                            </thead>
-                            <tbody id="matchday-deep-dive-tbody">
-                                <!-- Dynamic rows -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW 2: LEAGUE STANDINGS ENGINE MODE -->
-            <div class="terminal-body" id="view-standings" style="display: none;">
-                <div class="sql-filter-bar">
-                    <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1.5fr 1fr; gap: 1rem; width: 100%; align-items: center;">
-                        <div class="control-group">
-                            <label class="control-label">Select Season</label>
-                            <select id="standings-season-select" onchange="fetchStandingsTable()">
-                                <!-- Dynamic Seasons -->
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">Matchday Round</label>
-                            <select id="standings-matchday-select" onchange="fetchStandingsTable()">
-                                <option value="ALL">Full Season (End of Season)</option>
-                                <!-- Dynamic Matchdays -->
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">Table Perspective</label>
-                            <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr);">
-                                <button class="toggle-btn active" id="tbl-type-overall-btn" onclick="setStandingsTableType('overall')">Overall</button>
-                                <button class="toggle-btn" id="tbl-type-home-btn" onclick="setStandingsTableType('home')">Home</button>
-                                <button class="toggle-btn" id="tbl-type-away-btn" onclick="setStandingsTableType('away')">Away</button>
-                            </div>
-                        </div>
-
-                        <div class="control-group" style="justify-content: flex-end;">
-                            <span style="font-family: var(--font-mono); font-size: 0.825rem; color: var(--accent-magenta); font-weight: 700;" id="standings-summary-label">
-                                Loading Standings...
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Standings Table -->
-                <div class="table-container">
-                    <table>
+                <!-- Basic Table Container -->
+                <div class="terminal-table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="terminal-table">
                         <thead>
                             <tr>
-                                <th style="width: 60px; cursor: pointer;" onclick="sortStandingsTable('pos')">Pos <span id="sort-icon-pos"></span></th>
-                                <th style="cursor: pointer;" onclick="sortStandingsTable('team')">Club Team <span id="sort-icon-team"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('played')">P <span id="sort-icon-played"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('won')">W <span id="sort-icon-won"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('drawn')">D <span id="sort-icon-drawn"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('lost')">L <span id="sort-icon-lost"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gf')">GF <span id="sort-icon-gf"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('ga')">GA <span id="sort-icon-ga"></span></th>
-                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gd')">GD <span id="sort-icon-gd"></span></th>
-                                <th style="text-align: center; color: var(--accent-magenta); cursor: pointer;" onclick="sortStandingsTable('points')">Pts <span id="sort-icon-points"></span></th>
-                                <th style="cursor: pointer;" onclick="sortStandingsTable('prev_rank')">Prev Season Finish <span id="sort-icon-prev_rank"></span></th>
+                                <th>SEASON</th>
+                                <th>MATCH DATE</th>
+                                <th>HOME TEAM</th>
+                                <th>AWAY TEAM</th>
+                                <th>HT SCORE</th>
+                                <th>FT SCORE</th>
                             </tr>
                         </thead>
-                        <tbody id="standings-table-body">
-                            <!-- Dynamic Standings Rows -->
+                        <tbody id="matchday-deep-dive-tbody">
+                            <!-- Dynamic rows -->
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
 
-                <!-- Table Legend -->
-                <div id="dynamic-standings-legend" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 1rem; padding-left: 0.25rem;">
-                    <!-- Populated dynamically by javascript -->
+        <!-- VIEW 2: LEAGUE STANDINGS ENGINE MODE -->
+        <div class="terminal-body" id="view-standings" style="display: none;">
+            <div class="sql-filter-bar">
+                <div
+                    style="display: grid; grid-template-columns: 1.2fr 1.2fr 1.5fr 1fr; gap: 1rem; width: 100%; align-items: center;">
+                    <div class="control-group">
+                        <label class="control-label">Select Season</label>
+                        <select id="standings-season-select" onchange="fetchStandingsTable()">
+                            <!-- Dynamic Seasons -->
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Matchday Round</label>
+                        <select id="standings-matchday-select" onchange="fetchStandingsTable()">
+                            <option value="ALL">Full Season (End of Season)</option>
+                            <!-- Dynamic Matchdays -->
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Table Perspective</label>
+                        <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr);">
+                            <button class="toggle-btn active" id="tbl-type-overall-btn"
+                                onclick="setStandingsTableType('overall')">Overall</button>
+                            <button class="toggle-btn" id="tbl-type-home-btn"
+                                onclick="setStandingsTableType('home')">Home</button>
+                            <button class="toggle-btn" id="tbl-type-away-btn"
+                                onclick="setStandingsTableType('away')">Away</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group" style="justify-content: flex-end;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.825rem; color: var(--accent-magenta); font-weight: 700;"
+                            id="standings-summary-label">
+                            Loading Standings...
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <!-- VIEW 3: RAW SQL DATABASE TABLE VIEW -->
-            <div class="raw-sql-view" id="view-rawsql">
-
-                <!-- Dynamic Interactive Widget Dashboard for Empirical Statistics -->
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--accent-magenta);">INTERACTIVE PROBABILITY WIDGET DASHBOARD</span>
-                            <span id="widget-save-indicator" style="font-size: 0.75rem; font-family: var(--font-mono); color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; opacity: 0; transition: opacity 0.3s ease;">
-                                AUTO-SAVED
-                            </span>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <!-- Add Widget Dropdown -->
-                            <select id="add-widget-select" onchange="addWidgetFromDropdown()" style="width: 210px; padding: 0.4rem 0.65rem; font-size: 0.8rem;">
-                                <option value="">+ Add Metric Widget...</option>
-                            </select>
-
-                            <!-- HT vs FT Switcher Toggle -->
-                            <div class="toggle-buttons" style="grid-template-columns: 1fr 1fr; width: 260px;">
-                                <button class="toggle-btn active" id="stat-toggle-ht-btn" onclick="setStatsMode('ht')">Half-Time</button>
-                                <button class="toggle-btn" id="stat-toggle-ft-btn" onclick="setStatsMode('ft')">Full-Time</button>
-                            </div>
-
-                            <button class="btn-outline" onclick="resetDefaultWidgets()" style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
-                                Reset Default 8
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Draggable Interactive Widget Grid -->
-                    <div id="interactive-widget-grid" class="metrics-grid" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.75rem;">
-                        <!-- Dynamic Draggable Metric Cards Rendered via JS -->
-                    </div>
-                </div>
-
-                <div class="sql-filter-bar">
-                    <!-- Row 1: Team 1, Team 2, From Season, To Season, Matchday Round -->
-                    <div style="display: grid; grid-template-columns: 1.1fr 1.1fr 0.9fr 0.9fr 0.9fr 1fr; gap: 0.75rem; width: 100%; align-items: center;">
-                        <div class="control-group">
-                            <label class="control-label">Primary Team (Team 1)</label>
-                            <select id="sql-team1-filter" onchange="updateSQLVenueLabels(); resetAndFetchSQLTable();">
-                                <option value="ALL">All Teams</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">Opponent (Head-to-Head)</label>
-                            <select id="sql-team2-filter" onchange="resetAndFetchSQLTable()">
-                                <option value="ALL">All Opponents (Any)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">From Season</label>
-                            <select id="sql-season-start-filter" onchange="resetAndFetchSQLTable()">
-                                <option value="ALL">Earliest (1993)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">To Season</label>
-                            <select id="sql-season-end-filter" onchange="resetAndFetchSQLTable()">
-                                <option value="ALL">Latest (2025)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">Matchday Round</label>
-                            <select id="sql-matchday-filter" onchange="resetAndFetchSQLTable()">
-                                <option value="ALL">All Matchdays</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group" style="justify-content: flex-end;">
-                            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-magenta); font-weight: 700;" id="sql-counter-label">
-                                Showing 0 of 0 Matches
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Row 2: Standings Rank Filters Sub-Bar (Home Prev, Away Prev, Home Pre-Match, Away Pre-Match) -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.75rem; width: 100%; background: var(--bg-input); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <div class="control-group">
-                            <label class="control-label" style="color: var(--accent-magenta);">Home Prev Finish</label>
-                            <select id="sql-home-prev-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
-                                <option value="ALL">All Prev Ranks</option>
-                                <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
-                                <option value="TOP6">Top 6 Last Season (#1 - #6)</option>
-                                <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
-                                <option value="BOTTOMHALF">Relegation Battlers (#13 - #17)</option>
-                                <option value="PROMOTED">Promoted Teams (PROMOTED)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" style="color: var(--accent-magenta);">Away Prev Finish</label>
-                            <select id="sql-away-prev-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
-                                <option value="ALL">All Prev Ranks</option>
-                                <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
-                                <option value="TOP6">Top 6 Last Season (#1 - #6)</option>
-                                <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
-                                <option value="BOTTOMHALF">Relegation Battlers (#13 - #17)</option>
-                                <option value="PROMOTED">Promoted Teams (PROMOTED)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" style="color: #38bdf8;">Home Rank Going In</label>
-                            <select id="sql-home-pre-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
-                                <option value="ALL">All In-Season Ranks</option>
-                                <option value="TOP4">Top 4 Going In (#1 - #4)</option>
-                                <option value="TOP6">Top 6 Going In (#1 - #6)</option>
-                                <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
-                                <option value="BOTTOM5">Bottom 5 Going In (#16 - #20)</option>
-                            </select>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" style="color: #38bdf8;">Away Rank Going In</label>
-                            <select id="sql-away-pre-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
-                                <option value="ALL">All In-Season Ranks</option>
-                                <option value="TOP4">Top 4 Going In (#1 - #4)</option>
-                                <option value="TOP6">Top 6 Going In (#1 - #6)</option>
-                                <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
-                                <option value="BOTTOM5">Bottom 5 Going In (#16 - #20)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: Quick Season Presets, Clear All Filters Button, Customize Columns, Venue Buttons -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-                        <!-- Quick Season Presets -->
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">QUICK SEASONS:</span>
-                            <div class="toggle-buttons" style="grid-template-columns: repeat(4, 1fr); width: 340px;">
-                                <button class="toggle-btn" id="preset-3-btn" onclick="applySeasonPreset(3)">Last 3</button>
-                                <button class="toggle-btn" id="preset-5-btn" onclick="applySeasonPreset(5)">Last 5</button>
-                                <button class="toggle-btn" id="preset-10-btn" onclick="applySeasonPreset(10)">Last 10</button>
-                                <button class="toggle-btn active" id="preset-all-btn" onclick="applySeasonPreset(0)">All 33</button>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons: Clear All Filters & Column Customizer -->
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <button class="btn-outline" onclick="clearAllSQLFilters()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem; border-color: rgba(244, 114, 182, 0.4); color: var(--accent-magenta);">
-                                Clear All Filters
-                            </button>
-                            <button class="btn-outline" onclick="toggleColumnCustomizerPanel()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-                                Customize Columns (<span id="active-cols-capacity-pill">9 / 9 Max</span>)
-                            </button>
-                        </div>
-
-                        <!-- Venue Perspective Buttons -->
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);" id="venue-toggle-title">VENUE:</span>
-                            <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr); width: 480px;">
-                                <button class="toggle-btn active" id="sql-venue-all-btn" onclick="setSQLVenueRole('all')">All Matches (H2H)</button>
-                                <button class="toggle-btn" id="sql-venue-home-btn" onclick="setSQLVenueRole('home')">Team 1 at Home</button>
-                                <button class="toggle-btn" id="sql-venue-away-btn" onclick="setSQLVenueRole('away')">Team 1 Away</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Collapsible Column Manager Customizer Panel (Strict 9-Column Limit) -->
-                    <div id="column-customizer-panel" class="column-manager-panel" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                            <span style="font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-magenta);">
-                                TABLE COLUMN MANAGER (SELECT UP TO 9 ACTIVE COLUMNS)
-                            </span>
-                            <span id="col-limit-warning" style="font-size: 0.75rem; color: #f87171; font-weight: 600; display: none;">
-                                9/9 Max capacity reached. Uncheck a column to swap in another!
-                            </span>
-                        </div>
-                        <div class="col-checkbox-grid" id="column-checkboxes-container">
-                            <!-- Dynamic Column Checkboxes -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead id="raw-sql-table-head">
-                            <!-- Dynamic Table Header Columns -->
-                        </thead>
-                        <tbody id="raw-sql-table-body">
-                            <!-- Dynamic SQL rows from epl_quant.db -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <button class="load-more-btn" id="load-more-sql-btn" onclick="loadMoreSQLMatches()">
-                    Load More Matches (+25 Rows)
-                </button>
+            <!-- Standings Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px; cursor: pointer;" onclick="sortStandingsTable('pos')">Pos <span
+                                    id="sort-icon-pos"></span></th>
+                            <th style="cursor: pointer;" onclick="sortStandingsTable('team')">Club Team <span
+                                    id="sort-icon-team"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('played')">P
+                                <span id="sort-icon-played"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('won')">W <span
+                                    id="sort-icon-won"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('drawn')">D
+                                <span id="sort-icon-drawn"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('lost')">L
+                                <span id="sort-icon-lost"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gf')">GF <span
+                                    id="sort-icon-gf"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('ga')">GA <span
+                                    id="sort-icon-ga"></span></th>
+                            <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gd')">GD <span
+                                    id="sort-icon-gd"></span></th>
+                            <th style="text-align: center; color: var(--accent-magenta); cursor: pointer;"
+                                onclick="sortStandingsTable('points')">Pts <span id="sort-icon-points"></span></th>
+                            <th style="cursor: pointer;" onclick="sortStandingsTable('prev_rank')">Prev Season Finish
+                                <span id="sort-icon-prev_rank"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-table-body">
+                        <!-- Dynamic Standings Rows -->
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Table Legend -->
+            <div id="dynamic-standings-legend"
+                style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 1rem; padding-left: 0.25rem;">
+                <!-- Populated dynamically by javascript -->
+            </div>
+        </div>
+
+        <!-- VIEW 3: RAW SQL DATABASE TABLE VIEW -->
+        <div class="raw-sql-view" id="view-rawsql">
+
+            <!-- Dynamic Interactive Widget Dashboard for Empirical Statistics -->
+            <div
+                style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--accent-magenta);">INTERACTIVE
+                            PROBABILITY WIDGET DASHBOARD</span>
+                        <span id="widget-save-indicator"
+                            style="font-size: 0.75rem; font-family: var(--font-mono); color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; opacity: 0; transition: opacity 0.3s ease;">
+                            AUTO-SAVED
+                        </span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <!-- Add Widget Dropdown -->
+                        <select id="add-widget-select" onchange="addWidgetFromDropdown()"
+                            style="width: 210px; padding: 0.4rem 0.65rem; font-size: 0.8rem;">
+                            <option value="">+ Add Metric Widget...</option>
+                        </select>
+
+                        <!-- HT vs FT Switcher Toggle -->
+                        <div class="toggle-buttons" style="grid-template-columns: 1fr 1fr; width: 260px;">
+                            <button class="toggle-btn active" id="stat-toggle-ht-btn"
+                                onclick="setStatsMode('ht')">Half-Time</button>
+                            <button class="toggle-btn" id="stat-toggle-ft-btn"
+                                onclick="setStatsMode('ft')">Full-Time</button>
+                        </div>
+
+                        <button class="btn-outline" onclick="resetDefaultWidgets()"
+                            style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
+                            Reset Default 8
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Draggable Interactive Widget Grid -->
+                <div id="interactive-widget-grid" class="metrics-grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.75rem;">
+                    <!-- Dynamic Draggable Metric Cards Rendered via JS -->
+                </div>
+            </div>
+
+            <div class="sql-filter-bar">
+                <!-- Row 1: Team 1, Team 2, From Season, To Season, Matchday Round -->
+                <div
+                    style="display: grid; grid-template-columns: 1.1fr 1.1fr 0.9fr 0.9fr 0.9fr 1fr; gap: 0.75rem; width: 100%; align-items: center;">
+                    <div class="control-group">
+                        <label class="control-label">Primary Team (Team 1)</label>
+                        <select id="sql-team1-filter" onchange="updateSQLVenueLabels(); resetAndFetchSQLTable();">
+                            <option value="ALL">All Teams</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Opponent (Head-to-Head)</label>
+                        <select id="sql-team2-filter" onchange="resetAndFetchSQLTable()">
+                            <option value="ALL">All Opponents (Any)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">From Season</label>
+                        <select id="sql-season-start-filter" onchange="resetAndFetchSQLTable()">
+                            <option value="ALL">Earliest (1993)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">To Season</label>
+                        <select id="sql-season-end-filter" onchange="resetAndFetchSQLTable()">
+                            <option value="ALL">Latest (2025)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Matchday Round</label>
+                        <select id="sql-matchday-filter" onchange="resetAndFetchSQLTable()">
+                            <option value="ALL">All Matchdays</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" style="justify-content: flex-end;">
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-magenta); font-weight: 700;"
+                            id="sql-counter-label">
+                            Showing 0 of 0 Matches
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Row 2: Standings Rank Filters Sub-Bar (Home Prev, Away Prev, Home Pre-Match, Away Pre-Match) -->
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.75rem; width: 100%; background: var(--bg-input); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div class="control-group">
+                        <label class="control-label" style="color: var(--accent-magenta);">Home Prev Finish</label>
+                        <select id="sql-home-prev-filter" onchange="resetAndFetchSQLTable()"
+                            style="padding: 0.45rem; font-size: 0.825rem;">
+                            <option value="ALL">All Prev Ranks</option>
+                            <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
+                            <option value="TOP6">Top 6 Last Season (#1 - #6)</option>
+                            <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
+                            <option value="BOTTOMHALF">Relegation Battlers (#13 - #17)</option>
+                            <option value="PROMOTED">Promoted Teams (PROMOTED)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" style="color: var(--accent-magenta);">Away Prev Finish</label>
+                        <select id="sql-away-prev-filter" onchange="resetAndFetchSQLTable()"
+                            style="padding: 0.45rem; font-size: 0.825rem;">
+                            <option value="ALL">All Prev Ranks</option>
+                            <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
+                            <option value="TOP6">Top 6 Last Season (#1 - #6)</option>
+                            <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
+                            <option value="BOTTOMHALF">Relegation Battlers (#13 - #17)</option>
+                            <option value="PROMOTED">Promoted Teams (PROMOTED)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" style="color: #38bdf8;">Home Rank Going In</label>
+                        <select id="sql-home-pre-filter" onchange="resetAndFetchSQLTable()"
+                            style="padding: 0.45rem; font-size: 0.825rem;">
+                            <option value="ALL">All In-Season Ranks</option>
+                            <option value="TOP4">Top 4 Going In (#1 - #4)</option>
+                            <option value="TOP6">Top 6 Going In (#1 - #6)</option>
+                            <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
+                            <option value="BOTTOM5">Bottom 5 Going In (#16 - #20)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" style="color: #38bdf8;">Away Rank Going In</label>
+                        <select id="sql-away-pre-filter" onchange="resetAndFetchSQLTable()"
+                            style="padding: 0.45rem; font-size: 0.825rem;">
+                            <option value="ALL">All In-Season Ranks</option>
+                            <option value="TOP4">Top 4 Going In (#1 - #4)</option>
+                            <option value="TOP6">Top 6 Going In (#1 - #6)</option>
+                            <option value="MIDTABLE">Mid-Table (#5 - #12)</option>
+                            <option value="BOTTOM5">Bottom 5 Going In (#16 - #20)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3: Quick Season Presets, Clear All Filters Button, Customize Columns, Venue Buttons -->
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <!-- Quick Season Presets -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">QUICK
+                            SEASONS:</span>
+                        <div class="toggle-buttons" style="grid-template-columns: repeat(4, 1fr); width: 340px;">
+                            <button class="toggle-btn" id="preset-3-btn" onclick="applySeasonPreset(3)">Last 3</button>
+                            <button class="toggle-btn" id="preset-5-btn" onclick="applySeasonPreset(5)">Last 5</button>
+                            <button class="toggle-btn" id="preset-10-btn" onclick="applySeasonPreset(10)">Last
+                                10</button>
+                            <button class="toggle-btn active" id="preset-all-btn" onclick="applySeasonPreset(0)">All
+                                33</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Clear All Filters & Column Customizer -->
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <button class="btn-outline" onclick="clearAllSQLFilters()"
+                            style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem; border-color: rgba(244, 114, 182, 0.4); color: var(--accent-magenta);">
+                            Clear All Filters
+                        </button>
+                        <button class="btn-outline" onclick="toggleColumnCustomizerPanel()"
+                            style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                            Customize Columns (<span id="active-cols-capacity-pill">9 / 9 Max</span>)
+                        </button>
+                    </div>
+
+                    <!-- Venue Perspective Buttons -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);"
+                            id="venue-toggle-title">VENUE:</span>
+                        <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr); width: 480px;">
+                            <button class="toggle-btn active" id="sql-venue-all-btn"
+                                onclick="setSQLVenueRole('all')">All Matches (H2H)</button>
+                            <button class="toggle-btn" id="sql-venue-home-btn" onclick="setSQLVenueRole('home')">Team 1
+                                at Home</button>
+                            <button class="toggle-btn" id="sql-venue-away-btn" onclick="setSQLVenueRole('away')">Team 1
+                                Away</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Column Manager Customizer Panel (Strict 9-Column Limit) -->
+                <div id="column-customizer-panel" class="column-manager-panel" style="display: none;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <span
+                            style="font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-magenta);">
+                            TABLE COLUMN MANAGER (SELECT UP TO 9 ACTIVE COLUMNS)
+                        </span>
+                        <span id="col-limit-warning"
+                            style="font-size: 0.75rem; color: #f87171; font-weight: 600; display: none;">
+                            9/9 Max capacity reached. Uncheck a column to swap in another!
+                        </span>
+                    </div>
+                    <div class="col-checkbox-grid" id="column-checkboxes-container">
+                        <!-- Dynamic Column Checkboxes -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead id="raw-sql-table-head">
+                        <!-- Dynamic Table Header Columns -->
+                    </thead>
+                    <tbody id="raw-sql-table-body">
+                        <!-- Dynamic SQL rows from epl_quant.db -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="load-more-btn" id="load-more-sql-btn" onclick="loadMoreSQLMatches()">
+                Load More Matches (+25 Rows)
+            </button>
+        </div>
         </div>
     </main>
 
@@ -1044,42 +1176,85 @@
         const MAX_ALLOWED_COLUMNS = 9;
         let activeColumnKeys = [...DEFAULT_ACTIVE_COLUMNS];
 
-        // Master Catalog of all 16 Available Empirical Metric Widgets
+        // Master Catalog of all Empirical Metric Widgets
         const METRIC_CATALOG = {
-            "home_win": { label: "Home Win %", color: "#4ade80", category: "Outcomes" },
-            "draw": { label: "Draw %", color: "#facc15", category: "Outcomes" },
-            "away_win": { label: "Away Win %", color: "#f87171", category: "Outcomes" },
+            "t1_win": { label: "Home Team Win %", category: "Outcomes" },
+            "draw": { label: "Draw %", category: "Outcomes" },
+            "t2_win": { label: "Away Team Win %", category: "Outcomes" },
+            "btts": { label: "BTTS (Both Score) %", category: "BTTS" },
 
-            "btts": { label: "BTTS (Both Score) %", color: "#60a5fa", category: "BTTS" },
+            "total_over0_5": { label: "Total Goals > 0.5", category: "Total Goals (Over)" },
+            "total_over1_5": { label: "Total Goals > 1.5", category: "Total Goals (Over)" },
+            "total_over2_5": { label: "Total Goals > 2.5", category: "Total Goals (Over)" },
+            "total_over3_5": { label: "Total Goals > 3.5", category: "Total Goals (Over)" },
 
-            "g0": { label: "Total Goals = 0", color: "#8b949e", category: "Match Goals" },
-            "g1": { label: "Total Goals = 1", color: "#f0f6fc", category: "Match Goals" },
-            "g2": { label: "Total Goals = 2", color: "#f472b6", category: "Match Goals" },
-            "g3plus": { label: "Total Goals = 3+", color: "#8957e5", category: "Match Goals" },
+            "total_under0_5": { label: "Total Goals < 0.5", category: "Total Goals (Under)" },
+            "total_under1_5": { label: "Total Goals < 1.5", category: "Total Goals (Under)" },
+            "total_under2_5": { label: "Total Goals < 2.5", category: "Total Goals (Under)" },
+            "total_under3_5": { label: "Total Goals < 3.5", category: "Total Goals (Under)" },
 
-            "home_g0": { label: "Home Team Goals = 0", color: "#94a3b8", category: "Home Goals" },
-            "home_g1": { label: "Home Team Goals = 1", color: "#38bdf8", category: "Home Goals" },
-            "home_g2": { label: "Home Team Goals = 2", color: "#818cf8", category: "Home Goals" },
-            "home_g3plus": { label: "Home Team Goals = 3+", color: "#c084fc", category: "Home Goals" },
+            "t1_over0_5": { label: "Home Team > 0.5 Goals", category: "Home Team (Over)" },
+            "t1_over1_5": { label: "Home Team > 1.5 Goals", category: "Home Team (Over)" },
+            "t1_over2_5": { label: "Home Team > 2.5 Goals", category: "Home Team (Over)" },
+            "t1_over3_5": { label: "Home Team > 3.5 Goals", category: "Home Team (Over)" },
 
-            "away_g0": { label: "Away Team Goals = 0", color: "#cbd5e1", category: "Away Goals" },
-            "away_g1": { label: "Away Team Goals = 1", color: "#fb923c", category: "Away Goals" },
-            "away_g2": { label: "Away Team Goals = 2", color: "#f87171", category: "Away Goals" },
-            "away_g3plus": { label: "Away Team Goals = 3+", color: "#e879f9", category: "Away Goals" }
+            "t1_under0_5": { label: "Home Team < 0.5 Goals", category: "Home Team (Under)" },
+            "t1_under1_5": { label: "Home Team < 1.5 Goals", category: "Home Team (Under)" },
+            "t1_under2_5": { label: "Home Team < 2.5 Goals", category: "Home Team (Under)" },
+            "t1_under3_5": { label: "Home Team < 3.5 Goals", category: "Home Team (Under)" },
+
+            "t2_over0_5": { label: "Away Team > 0.5 Goals", category: "Away Team (Over)" },
+            "t2_over1_5": { label: "Away Team > 1.5 Goals", category: "Away Team (Over)" },
+            "t2_over2_5": { label: "Away Team > 2.5 Goals", category: "Away Team (Over)" },
+            "t2_over3_5": { label: "Away Team > 3.5 Goals", category: "Away Team (Over)" },
+
+            "t2_under0_5": { label: "Away Team < 0.5 Goals", category: "Away Team (Under)" },
+            "t2_under1_5": { label: "Away Team < 1.5 Goals", category: "Away Team (Under)" },
+            "t2_under2_5": { label: "Away Team < 2.5 Goals", category: "Away Team (Under)" },
+            "t2_under3_5": { label: "Away Team < 3.5 Goals", category: "Away Team (Under)" }
         };
 
-        // Standard Default 8 Widgets (Home Win %, Draw %, Away Win %, BTTS %, Goals = 0, Goals = 1, Goals = 2, Goals = 3+)
         const DEFAULT_WIDGET_KEYS = [
-            "home_win", "draw", "away_win", "btts",
-            "g0", "g1", "g2", "g3plus"
+            "t1_win", "draw", "t2_win", "btts",
+            "total_over1_5", "total_over2_5", "t1_over1_5", "t2_over1_5"
         ];
+
+        const MATCHDAY_DEFAULT_WIDGET_KEYS = [
+            "t1_win", "draw", "t2_win", "total_over0_5", "t1_over0_5", "t2_over0_5",
+            "btts", "total_over1_5", "t1_over1_5", "t2_over1_5", "total_over2_5", "total_over3_5"
+        ];
+
+        function getDynamicMetricLabel(key, configLabel, isMatchday) {
+            let t1Name = "Home Team";
+            let t2Name = "Away Team";
+
+            if (isMatchday) {
+                if (currentDeepDiveMatchup) {
+                    t1Name = currentDeepDiveMatchup.home;
+                    t2Name = currentDeepDiveMatchup.away;
+                }
+            } else {
+                const t1Select = document.getElementById('sql-team1-filter');
+                const t2Select = document.getElementById('sql-team2-filter');
+                if (t1Select && t1Select.value !== "ALL") t1Name = t1Select.value;
+                if (t2Select && t2Select.value !== "ALL") t2Name = t2Select.value;
+            }
+
+            let label = configLabel;
+            if (key.startsWith("t1_")) {
+                label = label.replace("Home Team", t1Name);
+            } else if (key.startsWith("t2_")) {
+                label = label.replace("Away Team", t2Name);
+            }
+            return label;
+        }
 
         let activeWidgetKeys = [];
 
         function getTeamBadgeHTML(teamName, logoUrl) {
             const url = logoUrl || null;
             const fallbackLetters = (teamName || 'TM').substring(0, 2).toUpperCase();
-            
+
             if (!url) {
                 return `
                     <span class="team-cell">
@@ -1101,7 +1276,7 @@
             if (!rankLabel || rankLabel === 'N/A') {
                 return `<span style="color: var(--text-muted); font-size: 0.75rem;">N/A</span>`;
             }
-            
+
             const upper = rankLabel.toUpperCase();
             if (upper === 'PROMOTED') {
                 return `<span style="background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">PROMOTED</span>`;
@@ -1112,7 +1287,7 @@
             if (rankLabel === '#1') {
                 return `<span style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px;">CHAMPION</span>`;
             }
-            
+
             return `<span class="rank-tag">${rankLabel}</span>`;
         }
 
@@ -1124,7 +1299,7 @@
         }
 
         let currentStandingsTableType = 'overall';
-        
+
         // SQL Table Pagination & Statistics State
         let sqlOffset = 0;
         const sqlLimit = 25;
@@ -1161,7 +1336,7 @@
             switchView(mode);
 
             populateMatchdayFilters();
-            
+
             await loadTeamsAndSeasons();
 
             // Explicitly reset dropdown values to prevent browser retention using selectedIndex
@@ -1169,7 +1344,7 @@
             document.getElementById('upcoming-matchday-select').selectedIndex = 0;
             document.getElementById('sql-matchday-filter').selectedIndex = 0;
             document.getElementById('standings-matchday-select').selectedIndex = 0;
-            
+
             await fetchUpcomingFixtures();
             await fetchStandingsTable();
             await resetAndFetchSQLTable();
@@ -1179,7 +1354,7 @@
             try {
                 const res = await fetch('/api/v1/auth/me', { method: 'GET' });
                 if (!res.ok) {
-                    try { await fetch('/api/v1/auth/logout', { method: 'POST' }); } catch(e) {}
+                    try { await fetch('/api/v1/auth/logout', { method: 'POST' }); } catch (e) { }
                     window.location.href = '/';
                     return;
                 }
@@ -1202,7 +1377,7 @@
         }
 
         async function logoutUser() {
-            try { await fetch('/api/v1/auth/logout', { method: 'POST' }); } catch (e) {}
+            try { await fetch('/api/v1/auth/logout', { method: 'POST' }); } catch (e) { }
             window.location.href = '/';
         }
 
@@ -1470,7 +1645,7 @@
             const league = document.getElementById('global-league-select')?.value || 'EPL';
             const numTeams = (league === 'Championship') ? 24 : 20;
             const numMatchdays = (numTeams - 1) * 2;
-            
+
             const standingsMdSelect = document.getElementById('standings-matchday-select');
             const sqlMdSelect = document.getElementById('sql-matchday-filter');
             const upcomingMdSelect = document.getElementById('upcoming-matchday-select');
@@ -1517,9 +1692,9 @@
 
                 const tbody = document.getElementById('standings-table-body');
                 tbody.innerHTML = '';
-                
+
                 const totalTeams = data.total_teams;
-                
+
                 // Update Dynamic Legend
                 const legendContainer = document.getElementById('dynamic-standings-legend');
                 if (legendContainer) {
@@ -1561,12 +1736,12 @@
                 window.currentStandingsData = data.standings;
                 window.currentStandingsLeague = league;
                 window.currentStandingsTotalTeams = data.total_teams;
-                
+
                 // Reset Sort State
                 currentStandingsSortColumn = 'pos';
                 currentStandingsSortAsc = true;
                 updateStandingsSortIcons();
-                
+
                 renderStandingsTable();
             } catch (e) {
                 console.error('Failed to fetch standings table:', e);
@@ -1578,20 +1753,20 @@
 
         function sortStandingsTable(column) {
             if (!window.currentStandingsData) return;
-            
+
             if (currentStandingsSortColumn === column) {
                 currentStandingsSortAsc = !currentStandingsSortAsc;
             } else {
                 currentStandingsSortColumn = column;
                 currentStandingsSortAsc = true;
             }
-            
+
             updateStandingsSortIcons();
-            
+
             window.currentStandingsData.sort((a, b) => {
                 let valA = a[column];
                 let valB = b[column];
-                
+
                 // Special handling for Prev Season Finish
                 if (column === 'prev_rank') {
                     const parseRank = (val) => {
@@ -1604,14 +1779,14 @@
                     valA = parseRank(valA);
                     valB = parseRank(valB);
                 }
-                
+
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     return currentStandingsSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 }
-                
+
                 return currentStandingsSortAsc ? valA - valB : valB - valA;
             });
-            
+
             renderStandingsTable();
         }
 
@@ -1632,12 +1807,12 @@
         function renderStandingsTable() {
             const tbody = document.getElementById('standings-table-body');
             tbody.innerHTML = '';
-            
+
             if (!window.currentStandingsData) return;
 
             window.currentStandingsData.forEach(r => {
                 const tr = document.createElement('tr');
-                
+
                 let rowStyle = '';
                 if (window.currentStandingsLeague === 'EPL' || window.currentStandingsLeague === 'Premier League') {
                     if (r.pos <= 4) rowStyle = 'border-left: 3px solid #4ade80;';
@@ -1649,7 +1824,7 @@
                     else if (r.pos > window.currentStandingsTotalTeams - 3) rowStyle = 'border-left: 3px solid #f87171;';
                 }
                 tr.style.cssText = rowStyle;
-                
+
                 tr.innerHTML = `
                     <td style="font-family: var(--font-mono); font-weight: 700; padding-left: 0.75rem;">${r.pos}</td>
                     <td>${getTeamBadgeHTML(r.team, r.logo)}</td>
@@ -1726,7 +1901,7 @@
             Object.keys(METRIC_CATALOG).forEach(k => {
                 if (!activeWidgetKeys.includes(k)) {
                     const item = METRIC_CATALOG[k];
-                    select.add(new Option(`[${item.category}] ${item.label}`, k));
+                    select.add(new Option(`[${item.category}] ${getDynamicMetricLabel(k, item.label, false)}`, k));
                 }
             });
         }
@@ -1748,8 +1923,8 @@
                 const config = METRIC_CATALOG[key];
                 if (!config) return;
 
-                const val = (currentDatasetStats && currentDatasetStats[currentStatsMode]) 
-                    ? (currentDatasetStats[currentStatsMode][key] || '0%') 
+                const val = (currentDatasetStats && currentDatasetStats[currentStatsMode])
+                    ? (currentDatasetStats[currentStatsMode][key] || '0%')
                     : '0%';
 
                 const card = document.createElement('div');
@@ -1762,10 +1937,10 @@
                 card.innerHTML = `
                     <span class="widget-drag-handle" title="Drag to reorder">⋮⋮</span>
                     <button class="widget-close-btn" onclick="removeWidget('${key}')" title="Remove widget">×</button>
-                    <div class="metric-val" id="widget-val-${key}" style="font-size: 1.45rem; color: ${config.color}; margin-top: 0.25rem;">
+                    <div class="metric-val" id="widget-val-${key}" style="font-size: 1.45rem; color: var(--text-color); margin-top: 0.25rem;">
                         ${val}
                     </div>
-                    <div class="metric-label" style="font-size: 0.725rem;">${config.label}</div>
+                    <div class="metric-label" style="font-size: 0.725rem;">${getDynamicMetricLabel(key, config.label, false)}</div>
                 `;
 
                 // Drag and Drop Event Listeners
@@ -1808,6 +1983,126 @@
         function handleDragEnd() {
             this.classList.remove('dragging');
             draggedCardIndex = null;
+        }
+
+        // --- MATCHDAY PROBABILITY WIDGET DASHBOARD FUNCTIONS ---
+        let activeMatchdayWidgetKeys = [...MATCHDAY_DEFAULT_WIDGET_KEYS];
+        let currentMatchdayStatsMode = 'ht';
+        let currentMatchdayStats = null;
+        let draggedMatchdayCardIndex = null;
+
+        function setMatchdayStatsMode(mode) {
+            currentMatchdayStatsMode = mode;
+            document.getElementById('md-stat-toggle-ht-btn').classList.toggle('active', mode === 'ht');
+            document.getElementById('md-stat-toggle-ft-btn').classList.toggle('active', mode === 'ft');
+            renderMatchdayWidgetDashboard();
+        }
+
+        function resetMatchdayDefaultWidgets() {
+            activeMatchdayWidgetKeys = [...MATCHDAY_DEFAULT_WIDGET_KEYS];
+            renderMatchdayWidgetDashboard();
+        }
+
+        function removeMatchdayWidget(key) {
+            activeMatchdayWidgetKeys = activeMatchdayWidgetKeys.filter(k => k !== key);
+            renderMatchdayWidgetDashboard();
+        }
+
+        function addMatchdayWidgetFromDropdown() {
+            const select = document.getElementById('md-add-widget-select');
+            const key = select.value;
+            if (key && !activeMatchdayWidgetKeys.includes(key)) {
+                activeMatchdayWidgetKeys.push(key);
+                renderMatchdayWidgetDashboard();
+            }
+            select.value = '';
+        }
+
+        function populateMatchdayAddWidgetDropdown() {
+            const select = document.getElementById('md-add-widget-select');
+            if (!select) return;
+            select.innerHTML = '<option value="">+ Add Metric Widget...</option>';
+            Object.keys(METRIC_CATALOG).forEach(k => {
+                if (!activeMatchdayWidgetKeys.includes(k)) {
+                    const item = METRIC_CATALOG[k];
+                    select.add(new Option(`[${item.category}] ${getDynamicMetricLabel(k, item.label, true)}`, k));
+                }
+            });
+        }
+
+        function renderMatchdayWidgetDashboard() {
+            const grid = document.getElementById('md-interactive-widget-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            populateMatchdayAddWidgetDropdown();
+
+            if (activeMatchdayWidgetKeys.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                        No metric widgets added. Use the <strong>"+ Add Metric Widget"</strong> dropdown above to select stats!
+                    </div>
+                `;
+                return;
+            }
+
+            activeMatchdayWidgetKeys.forEach((key, index) => {
+                const config = METRIC_CATALOG[key];
+                if (!config) return;
+
+                const val = (currentMatchdayStats && currentMatchdayStats[currentMatchdayStatsMode])
+                    ? (currentMatchdayStats[currentMatchdayStatsMode][key] || '0%')
+                    : '0%';
+
+                const card = document.createElement('div');
+                card.className = 'metric-card md-draggable-widget';
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('data-key', key);
+                card.setAttribute('data-index', index);
+                card.style.padding = '0.85rem 0.5rem';
+                card.style.cursor = 'grab';
+
+                card.innerHTML = `
+                    <span class="widget-drag-handle" title="Drag to reorder">⋮⋮</span>
+                    <button class="widget-close-btn" onclick="removeMatchdayWidget('${key}')" title="Remove widget">×</button>
+                    <div class="metric-val" id="md-widget-val-${key}" style="font-size: 1.45rem; color: var(--text-color); margin-top: 0.25rem;">
+                        ${val}
+                    </div>
+                    <div class="metric-label" style="font-size: 0.725rem;">${getDynamicMetricLabel(key, config.label, true)}</div>
+                `;
+
+                card.addEventListener('dragstart', handleMatchdayDragStart);
+                card.addEventListener('dragover', handleMatchdayDragOver);
+                card.addEventListener('drop', handleMatchdayDrop);
+                card.addEventListener('dragend', handleMatchdayDragEnd);
+
+                grid.appendChild(card);
+            });
+        }
+
+        function handleMatchdayDragStart(e) {
+            draggedMatchdayCardIndex = parseInt(this.getAttribute('data-index'), 10);
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        function handleMatchdayDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+        function handleMatchdayDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            const targetIndex = parseInt(this.getAttribute('data-index'), 10);
+            if (draggedMatchdayCardIndex !== targetIndex && draggedMatchdayCardIndex !== null && targetIndex !== null) {
+                const draggedKey = activeMatchdayWidgetKeys[draggedMatchdayCardIndex];
+                activeMatchdayWidgetKeys.splice(draggedMatchdayCardIndex, 1);
+                activeMatchdayWidgetKeys.splice(targetIndex, 0, draggedKey);
+                renderMatchdayWidgetDashboard();
+            }
+            return false;
+        }
+        function handleMatchdayDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedMatchdayCardIndex = null;
         }
 
         async function loadTeamsAndSeasons() {
@@ -1875,7 +2170,7 @@
                 endFilter.value = 'ALL';
             } else {
                 document.getElementById(`preset-${yearsCount}-btn`).classList.add('active');
-                endFilter.value = availableSeasonsList[0]; 
+                endFilter.value = availableSeasonsList[0];
                 const targetIdx = Math.min(yearsCount - 1, availableSeasonsList.length - 1);
                 startFilter.value = availableSeasonsList[targetIdx];
             }
@@ -2052,8 +2347,8 @@
             const rawsqlView = document.getElementById('view-rawsql');
 
             const leagueSelect = document.getElementById('global-league-select');
-            const league = leagueSelect && leagueSelect.value ? 
-                (leagueSelect.value === 'EPL' ? 'PREMIER LEAGUE' : leagueSelect.value.toUpperCase()) 
+            const league = leagueSelect && leagueSelect.value ?
+                (leagueSelect.value === 'EPL' ? 'PREMIER LEAGUE' : leagueSelect.value.toUpperCase())
                 : 'PREMIER LEAGUE';
 
             // Reset all
@@ -2087,15 +2382,18 @@
 
         async function loadMatchdayDetails(homeTeam, awayTeam) {
             currentDeepDiveMatchup = { home: homeTeam, away: awayTeam };
-            
+
             // Set pill text
             const pill = document.getElementById('deep-dive-matchup-pill');
             pill.textContent = `${homeTeam} vs ${awayTeam}`;
-            
+
             // Show container and scroll to it
             const deepDiveContainer = document.getElementById('matchday-deep-dive');
+            const widgetContainer = document.getElementById('md-probability-widget-container');
+
             deepDiveContainer.style.display = 'flex';
-            deepDiveContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            widgetContainer.style.display = 'flex';
+            widgetContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             await refreshMatchdayDeepDive();
         }
@@ -2106,21 +2404,41 @@
             const contextFilter = document.getElementById('matchday-context-filter').value;
             const lookbackFilter = document.getElementById('matchday-lookback-filter').value;
             const isExact = contextFilter === 'exact';
-            
+
             const url = `/api/v1/terminal/matchday-history?team_a=${encodeURIComponent(currentDeepDiveMatchup.home)}&team_b=${encodeURIComponent(currentDeepDiveMatchup.away)}&exact=${isExact}&limit=${lookbackFilter}`;
-            
+
             try {
                 const tbody = document.getElementById('matchday-deep-dive-tbody');
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1rem;">Loading...</td></tr>';
+                const widgetGrid = document.getElementById('md-interactive-widget-grid');
                 
+                // Subtle loading state without destroying the DOM to prevent layout shifts
+                tbody.style.opacity = '0.5';
+                tbody.style.transition = 'opacity 0.2s ease';
+                if (widgetGrid) {
+                    widgetGrid.style.opacity = '0.5';
+                    widgetGrid.style.transition = 'opacity 0.2s ease';
+                }
+
                 const res = await fetch(url);
                 const data = await res.json();
-                
+
+                // Restore opacity
+                tbody.style.opacity = '1';
+                if (widgetGrid) widgetGrid.style.opacity = '1';
+
                 tbody.innerHTML = '';
                 if (!data.matches || data.matches.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1rem;">No historical matches found for these filters.</td></tr>';
+
+                    // Reset widget dashboard to 0s
+                    currentMatchdayStats = null;
+                    renderMatchdayWidgetDashboard();
                     return;
                 }
+
+                // Crunch new probabilities and render widget
+                currentMatchdayStats = data.stats;
+                renderMatchdayWidgetDashboard();
 
                 data.matches.forEach(m => {
                     const tr = document.createElement('tr');
@@ -2130,7 +2448,7 @@
                         <td style="font-weight: ${m.home_team === currentDeepDiveMatchup.home ? 'bold' : 'normal'}">${getTeamBadgeHTML(m.home_team, m.home_logo)}</td>
                         <td style="font-weight: ${m.away_team === currentDeepDiveMatchup.away ? 'bold' : 'normal'}">${getTeamBadgeHTML(m.away_team, m.away_logo)}</td>
                         <td style="font-family: var(--font-mono);">${m.ht_score}</td>
-                        <td style="font-family: var(--font-mono); color: var(--accent-magenta); font-weight: bold;">${m.ft_score}</td>
+                        <td style="font-family: var(--font-mono); font-weight: bold;">${m.ft_score}</td>
                     `;
                     tbody.appendChild(tr);
                 });
