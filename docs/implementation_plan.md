@@ -25,6 +25,17 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
 - [x] Create core HTML/CSS layout structure with responsive design tokens.
 - [x] Build `app/static/index.html`: DataWrangler.AI landing page with Copilot Purple (`#8957e5`) & Magenta (`#f472b6`) styling.
 - [x] Configure root routes in `app/main.py`.
+      #### Section 2.0: Making UI modifications starting on September 22, 2026
+      [x] From the home page - Eliminiate the concept of Sports Betting and transition the concept to Analytics
+      [x] Eliminate the concept of premier league sports and install the concept of global soccer, but include the concept of BETA testing - this product is currently being worked on and is heavily under development - we're just trying our best to deploy a beta.
+      [ ] The Dashboard is not updated based on what we see when we work with the software and the dashboard after logging in, we need to make changes to how the dashboard is updated when we make modifications to the software.
+      [x] We need to change the $ per month for Pro Access and make it such that it's more of a BETA we're in a BETA process and currently the software is not for sale, we're just collecting information and data etc.
+      [x] Add a section where it's explained how to get started For example, create and account and log in.
+      #### Section 2.1: Making UI modifications to the terminal workspace - league standings engine
+      [x] Under the league standings Engine in the terminal workspace the matches played or P or GF or GA text color is exactly what should be used for the W text, D text and L text, please do not use Green, yellow or red for the W, D, and L text. 
+      [x] For Table Perspective, I don't want icons next to overall, home or away, simply text is good enough. In General as a general rule of thumb, we should not be using icons unless otherwise specificed like the team badges. 
+      
+
 
 ### Phase 2: Configuration Engine & Database ORM Schema
 - [x] `app/core/config.py`: Environment configuration via Pydantic Settings (`DATABASE_URL`, `JWT_SECRET_KEY`).
@@ -45,6 +56,8 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
 - [x] **Task 4.1: ETL Fetching Module (`app/ingestion/football_data.py`)**:
   - Build `FootballDataIngestor` class using `httpx` async client.
   - Multi-season URL generator for 33 historical seasons (`1993-1994` through `2025-2026`).
+  **Task 4.2: 9.22.26 Iteration**:
+    [x] When fetching data be inclusive of the current seasons data, in this example we're currently undergoing the 2026-2027 season, be sure to include the data for the current season. Including but not limited to League Standings Engine all matchday round data, and the Raw SQL Match Database data.
 - [x] **Task 4.2: Data Cleaning & Normalization Engine**:
   - Implement date parsing outputting strict `MM/DD/YYYY` (e.g. `08/11/2023`).
   - Add explicit `season` column (e.g. `'1999-2000'`, `'2025-2026'`).
@@ -57,6 +70,10 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
 - [ ] **Task 4.4: Ingestion CLI & Automated Scheduler**:
   - Standalone CLI execution (`python3 -m app.ingestion.football_data --seasons all`).
   - Automated bi-weekly update trigger (Mondays & Thursdays post-fixture rounds).
+- [x] **Task 4.5: Club Team Pictures**:
+  - Create a function, and a way to store each club team picture in our database for easy access.
+  - There are clubs in both championship, and english premier league that don't have the picture of the club and we need to have this picture stored, so that for every season and every league we can clearly see the clubs picture.  
+  - This needs to be scaleable when we add more leagues so ensure the scrips and funcitons are designed with scalability in mind for easy updates, modifications, and bug fixes, and database saves in the future.
 
 ### Phase 4.5: Standings Engine, Standing Rank Filters & Clear All Filters Button
 - [x] **Task 4.5.1: Matchday-by-Matchday Standings Endpoint (`GET /api/v1/terminal/standings`)**:
@@ -83,3 +100,8 @@ Build a production-ready Minimum Viable Product (MVP) web application for **Data
 
 ### Manual Verification
 - Open `/dashboard` in browser, set multiple filters (e.g. Arsenal vs Chelsea, Top 4 Prev Finish), then click **`🧹 Clear All Filters`** and verify all dropdowns return to "All" and the database resets to full 12,704 matches view!
+
+
+### Ideas: Improvements functionality 
+  - Should be aple to click on each individual match and run into head to head, head to head exact, rank based head to head and alternative comparison, plus statistic based presentations.
+  - should have a statistic section for general interpretation and generalized understand of leagues, matchdays, performance, etc. 

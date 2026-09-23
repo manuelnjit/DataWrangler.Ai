@@ -33,6 +33,7 @@ connect_args = {}
 if settings.DATABASE_URL.startswith("sqlite"):
     # SQLite-specific flag: Allows multi-threaded async request handlers to share connections safely
     connect_args["check_same_thread"] = False
+    connect_args["timeout"] = 15.0
 
 # Create the primary database engine.
 # `echo=settings.DEBUG_SQL`: Enables real-time SQL execution logging when DEBUG_SQL=True.

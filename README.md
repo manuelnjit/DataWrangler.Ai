@@ -11,6 +11,41 @@ The tech stack comprises:
 - **Database**: SQLite (`epl_quant.db`) with SQLAlchemy ORM
 - **Security**: JWT tokens stored in `HttpOnly` cookies, `bcrypt` password hashing
 
+## 📁 Project Architecture & Directory Structure
+```text
+datawrangler-ai/
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── auth.py         # JWT and cookie authentication endpoints
+│   │       └── terminal.py     # Standings and probability modeling endpoints
+│   ├── core/
+│   │   ├── config.py           # Environment variables and system settings
+│   │   └── security.py         # Password hashing and token generation
+│   ├── db/
+│   │   └── database.py         # SQLAlchemy engine and get_db() session manager
+│   ├── ingestion/
+│   │   └── football_data.py    # Async ETL script to scrape and upsert historical matches
+│   ├── models/
+│   │   ├── matches.py          # SQLAlchemy matches table schema
+│   │   └── users.py            # SQLAlchemy users table schema
+│   ├── schemas/
+│   │   └── auth.py             # Pydantic validation schemas for auth
+│   ├── static/
+│   │   ├── index.html          # Frontend Landing Page
+│   │   └── dashboard.html      # Protected Software Terminal UI
+│   └── main.py                 # FastAPI application and route mounting
+├── data/
+│   └── epl_quant.db            # SQLite Database (Git ignored)
+├── docs/
+│   ├── IMPLEMENTATION_PLAN.md  # Detailed task checklist and progress
+│   └── MARKETING_PLAN.md       # Target audience and beta testing strategy
+├── .env                        # Local secret variables (DO NOT COMMIT)
+├── .gitignore                  # Tells GitHub what files/folders to ignore
+├── requirements.txt            # Python dependencies
+└── README.md                   # Project documentation
+```
+
 ## ✅ What's Been Built So Far
 We have successfully completed Phases 1 through 4.5 of the Implementation Plan:
 

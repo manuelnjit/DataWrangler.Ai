@@ -10,13 +10,15 @@ This router exposes endpoints for authenticated users to:
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
 from app.db.database import get_db
 from app.models.matches import Match
+from app.models.teams import Team
 from app.models.users import User
 from app.api.v1.auth import get_current_user_from_request
 
@@ -25,17 +27,19 @@ logger = logging.getLogger("datawrangler.terminal")
 router = APIRouter(prefix="/terminal", tags=["Terminal Data & Modeling"])
 
 # In-Memory Cache for Final Season Standings to provide sub-millisecond prior season rank lookups
-_SEASON_STANDINGS_CACHE: Dict[str, Dict[str, int]] = {}
-_MATCHDAY_STANDINGS_CACHE: Dict[str, Dict[int, Dict[str, int]]] = {}
+_SEASON_STANDINGS_CACHE: Dict[Tuple[str, str], Dict[str, int]] = {}
+_MATCHDAY_STANDINGS_CACHE: Dict[Tuple[str, str], Dict[int, Dict[str, int]]] = {}
 
 
-def get_season_final_ranks(db: Session, season_str: str) -> Dict[str, int]:
-    """Calculates final Premier League ranks (1 to 20/22) for a given season. Returns dict mapping team_name -> rank integer."""
-    if season_str in _SEASON_STANDINGS_CACHE:
-        return _SEASON_STANDINGS_CACHE[season_str]
+def get_season_final_ranks(db: Session, season_str: str, league: str) -> Dict[str, int]:
+    """Calculates final ranks (1 to 20/24) for a given season and league. Returns dict mapping team_name -> rank integer."""
+    cache_key = (league, season_str)
+    if cache_key in _SEASON_STANDINGS_CACHE:
+        return _SEASON_STANDINGS_CACHE[cache_key]
 
     matches = db.query(Match).filter(
         Match.season == season_str,
+        Match.league == league,
         Match.status == "COMPLETED",
         Match.ftr.isnot(None)
     ).all()
@@ -81,21 +85,23 @@ def get_season_final_ranks(db: Session, season_str: str) -> Dict[str, int]:
     )
 
     rank_map = {team_name: idx + 1 for idx, team_name in enumerate(sorted_teams)}
-    _SEASON_STANDINGS_CACHE[season_str] = rank_map
+    _SEASON_STANDINGS_CACHE[cache_key] = rank_map
     return rank_map
 
 
-def get_matchday_pre_ranks(db: Session, season_str: str, target_matchday: int) -> Dict[str, int]:
-    """Calculates standing ranks (1 to 20) of all teams going into target_matchday (using matches up to target_matchday - 1)."""
+def get_matchday_pre_ranks(db: Session, season_str: str, target_matchday: int, league: str) -> Dict[str, int]:
+    """Calculates standing ranks of all teams in a league going into target_matchday (using matches up to target_matchday - 1)."""
     if target_matchday <= 1:
         return {}
 
     prior_md = target_matchday - 1
-    if season_str in _MATCHDAY_STANDINGS_CACHE and prior_md in _MATCHDAY_STANDINGS_CACHE[season_str]:
-        return _MATCHDAY_STANDINGS_CACHE[season_str][prior_md]
+    cache_key = (league, season_str)
+    if cache_key in _MATCHDAY_STANDINGS_CACHE and prior_md in _MATCHDAY_STANDINGS_CACHE[cache_key]:
+        return _MATCHDAY_STANDINGS_CACHE[cache_key][prior_md]
 
     matches = db.query(Match).filter(
         Match.season == season_str,
+        Match.league == league,
         Match.matchday <= prior_md,
         Match.status == "COMPLETED",
         Match.ftr.isnot(None)
@@ -138,9 +144,9 @@ def get_matchday_pre_ranks(db: Session, season_str: str, target_matchday: int) -
 
     rank_map = {team_name: idx + 1 for idx, team_name in enumerate(sorted_teams)}
 
-    if season_str not in _MATCHDAY_STANDINGS_CACHE:
-        _MATCHDAY_STANDINGS_CACHE[season_str] = {}
-    _MATCHDAY_STANDINGS_CACHE[season_str][prior_md] = rank_map
+    if cache_key not in _MATCHDAY_STANDINGS_CACHE:
+        _MATCHDAY_STANDINGS_CACHE[cache_key] = {}
+    _MATCHDAY_STANDINGS_CACHE[cache_key][prior_md] = rank_map
 
     return rank_map
 
@@ -189,13 +195,23 @@ def match_rank_filter(rank_val: Optional[int], is_promoted: bool, filter_str: Op
     return True
 
 
-@router.get("/teams", response_model=List[str])
+@router.get("/teams")
 def get_available_teams(
     league: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_request),
 ):
-    """Returns a sorted list of unique Premier League team names stored in the database."""
+    """Returns a sorted list of unique team objects (name and logo_path) stored in the database.
+    
+    Design Decision (Task 4.5): 
+    Previously, this endpoint returned a simple List[str] of team names by running a DISTINCT query
+    against the `matches` table. Now, it queries the new `teams` table to retrieve both the
+    normalized team name and the local filepath to their official crest logo. This allows the frontend
+    dropdowns and UI components to natively render club badges.
+    
+    Returns:
+        List[Dict[str, str]]: JSON array of objects with keys 'name' and 'logo'.
+    """
     query_home = db.query(Match.home_team).distinct()
     query_away = db.query(Match.away_team).distinct()
     
@@ -203,18 +219,24 @@ def get_available_teams(
         query_home = query_home.filter(Match.league == league)
         query_away = query_away.filter(Match.league == league)
         
-    home_teams = query_home.all()
-    away_teams = query_away.all()
+    home_teams = [t[0] for t in query_home.all() if t[0]]
+    away_teams = [t[0] for t in query_away.all() if t[0]]
+    teams_set = set(home_teams + away_teams)
+    
+    sorted_team_names = sorted(list(teams_set))
+    
+    # Batch query the Team metadata table to fetch the logo paths
+    team_metadata = db.query(Team).filter(Team.name.in_(sorted_team_names)).all()
+    logo_map = {t.name: t.logo_path for t in team_metadata}
+    
+    response_payload = []
+    for team_name in sorted_team_names:
+        response_payload.append({
+            "name": team_name,
+            "logo": logo_map.get(team_name) or "/static/images/crests/generic.png"
+        })
 
-    teams_set = set()
-    for (t,) in home_teams:
-        if t:
-            teams_set.add(t)
-    for (t,) in away_teams:
-        if t:
-            teams_set.add(t)
-
-    return sorted(list(teams_set))
+    return response_payload
 
 
 @router.get("/seasons", response_model=List[str])
@@ -246,13 +268,17 @@ def get_available_leagues(
 @router.get("/standings")
 def get_league_standings(
     league: Optional[str] = None,
-    season: str = "2023-2024",
+    season: Optional[str] = None,
     matchday: Optional[int] = None,
     table_type: Optional[str] = "overall",  # 'overall', 'home', 'away'
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_request),
 ):
     """Calculates matchday-by-matchday Premier League standings for any season, with prior season rank & PROMOTED tagging."""
+    if not season:
+        latest = db.query(Match.season).order_by(Match.season.desc()).first()
+        season = latest[0] if latest else "2026-2027"
+
     query = db.query(Match).filter(
         Match.season == season,
         Match.status == "COMPLETED",
@@ -266,8 +292,12 @@ def get_league_standings(
     matches = query.order_by(Match.match_date).all()
 
     # Get Previous Season Ranks
+    league_to_use = league if league and league != "ALL" else "EPL"
     prev_season_str = get_previous_season_string(season)
-    prev_rank_map = get_season_final_ranks(db, prev_season_str) if prev_season_str else {}
+    prev_rank_map = get_season_final_ranks(db, prev_season_str, league_to_use) if prev_season_str else {}
+    
+    other_league = "Championship" if league_to_use == "EPL" else "EPL"
+    other_prev_rank_map = get_season_final_ranks(db, prev_season_str, other_league) if prev_season_str else {}
 
     table_data: Dict[str, Dict] = {}
 
@@ -285,7 +315,10 @@ def get_league_standings(
                 elif team_name in prev_rank_map:
                     prev_label = f"#{prev_rank_map[team_name]}"
                 else:
-                    prev_label = "PROMOTED"
+                    if league_to_use == "EPL":
+                        prev_label = "Promoted"
+                    else:
+                        prev_label = "Relegated" if team_name in other_prev_rank_map else "Promoted"
 
                 table_data[team_name] = {
                     "team": team_name,
@@ -339,8 +372,14 @@ def get_league_standings(
         reverse=True,
     )
 
+    # Batch query Team metadata to inject logos
+    team_names = [r["team"] for r in sorted_standings]
+    teams_meta = db.query(Team).filter(Team.name.in_(team_names)).all()
+    logo_map = {t.name: t.logo_path for t in teams_meta}
+
     for idx, row in enumerate(sorted_standings):
         row["pos"] = idx + 1
+        row["logo"] = logo_map.get(row["team"]) or "/static/images/crests/generic.png"
 
     return {
         "season": season,
@@ -354,74 +393,62 @@ def get_league_standings(
 @router.get("/upcoming")
 def get_upcoming_scheduled_fixtures(
     league: Optional[str] = None,
-    season: str = "2025-2026",
+    season: Optional[str] = None,
     matchday: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_request),
 ):
-    """Fetches upcoming scheduled Premier League fixtures with pre-match ranks & 1-click model scenario parameters."""
-    query = db.query(Match).filter(
-        Match.season == season,
-        Match.status == "SCHEDULED"
-    )
+    """Fetches upcoming (or historical) fixtures for a given matchday."""
+    if not season:
+        latest = db.query(Match.season).order_by(Match.season.desc()).first()
+        season = latest[0] if latest else "2026-2027"
+
+    query = db.query(Match).filter(Match.season == season)
+    
     if league and league != "ALL":
         query = query.filter(Match.league == league)
 
     if matchday is not None and matchday > 0:
         query = query.filter(Match.matchday == matchday)
     else:
-        # Default to lowest matchday round that has scheduled matches
-        first_scheduled = query.order_by(Match.matchday).first()
-        if first_scheduled and first_scheduled.matchday:
-            target_md = first_scheduled.matchday
+        # Default to the matchday of the NEXT chronological scheduled match
+        today = datetime.now().date()
+        next_scheduled = query.filter(Match.status == "SCHEDULED", Match.match_date >= today).order_by(Match.match_date).first()
+        
+        if next_scheduled and next_scheduled.matchday:
+            target_md = next_scheduled.matchday
             query = query.filter(Match.matchday == target_md)
+        else:
+            # If no future scheduled matches (e.g. season is over or no future matches ingested),
+            # fallback to the highest COMPLETED matchday
+            last_completed = query.filter(Match.status == "COMPLETED").order_by(Match.matchday.desc()).first()
+            if last_completed and last_completed.matchday:
+                target_md = last_completed.matchday
+                query = query.filter(Match.matchday == target_md)
+            else:
+                # Absolute fallback if db is totally empty for this league
+                query = query.filter(Match.matchday == 1)
 
     upcoming_matches = query.order_by(Match.matchday, Match.match_date, Match.home_team).all()
 
-    prev_season_str = get_previous_season_string(season)
-    prev_ranks = get_season_final_ranks(db, prev_season_str) if prev_season_str else {}
+    # Pre-fetch logos
+    all_teams_meta = db.query(Team).all()
+    logo_map = {t.name: t.logo_path for t in all_teams_meta}
 
     results = []
     for m in upcoming_matches:
-        h_prev_num = prev_ranks.get(m.home_team)
-        h_prev_str = f"#{h_prev_num}" if h_prev_num else ("N/A" if not prev_season_str else "PROMOTED")
-
-        a_prev_num = prev_ranks.get(m.away_team)
-        a_prev_str = f"#{a_prev_num}" if a_prev_num else ("N/A" if not prev_season_str else "PROMOTED")
-
-        md_pre_map = get_matchday_pre_ranks(db, m.season, m.matchday or 1)
-        h_pre_num = md_pre_map.get(m.home_team)
-        h_pre_str = f"#{h_pre_num}" if h_pre_num else "MD 1"
-
-        a_pre_num = md_pre_map.get(m.away_team)
-        a_pre_str = f"#{a_pre_num}" if a_pre_num else "MD 1"
-
-        # Determine rank filter preset strings for 1-click scenario simulation
-        h_prev_filter_val = "PROMOTED" if h_prev_str == "PROMOTED" else (str(h_prev_num) if h_prev_num else "ALL")
-        a_prev_filter_val = "PROMOTED" if a_prev_str == "PROMOTED" else (str(a_prev_num) if a_prev_num else "ALL")
-
-        h_pre_filter_val = str(h_pre_num) if h_pre_num else "ALL"
-        a_pre_filter_val = str(a_pre_num) if a_pre_num else "ALL"
-
         results.append({
             "id": m.id,
             "season": m.season,
             "matchday": m.matchday,
             "match_date": m.match_date.strftime("%m/%d/%Y") if m.match_date else None,
             "home_team": m.home_team,
+            "home_logo": logo_map.get(m.home_team) or "/static/images/crests/generic.png",
             "away_team": m.away_team,
-            "home_prev_rank": h_prev_str,
-            "away_prev_rank": a_prev_str,
-            "home_pre_rank": h_pre_str,
-            "away_pre_rank": a_pre_str,
-            "scenario_params": {
-                "team1": m.home_team,
-                "team2": m.away_team,
-                "home_prev_filter": h_prev_filter_val,
-                "away_prev_filter": a_prev_filter_val,
-                "home_pre_filter": h_pre_filter_val,
-                "away_pre_filter": a_pre_filter_val,
-            }
+            "away_logo": logo_map.get(m.away_team) or "/static/images/crests/generic.png",
+            "status": m.status,
+            "fthg": m.fthg,
+            "ftag": m.ftag
         })
 
     return {
@@ -523,20 +550,27 @@ def get_raw_matches_table(
     filtered_rows = []
     enriched_match_data = []
 
+    # Pre-fetch all logos to avoid N+1 queries during loop
+    all_teams_meta = db.query(Team).all()
+    logo_map = {t.name: t.logo_path for t in all_teams_meta}
+
     for m in all_matching_rows:
+        m_league = m.league or "EPL"
         prev_s = get_previous_season_string(m.season)
-        prev_ranks = get_season_final_ranks(db, prev_s) if prev_s else {}
+        prev_ranks = get_season_final_ranks(db, prev_s, m_league) if prev_s else {}
+        other_league = "Championship" if m_league == "EPL" else "EPL"
+        other_prev_ranks = get_season_final_ranks(db, prev_s, other_league) if prev_s else {}
 
         h_prev_num = prev_ranks.get(m.home_team)
         h_is_promoted = (prev_s is not None) and (m.home_team not in prev_ranks)
-        h_prev_rank_str = f"#{h_prev_num}" if h_prev_num else ("N/A" if not prev_s else "PROMOTED")
+        h_prev_rank_str = f"#{h_prev_num}" if h_prev_num else ("N/A" if not prev_s else ("Promoted" if m_league == "EPL" else ("Relegated" if m.home_team in other_prev_ranks else "Promoted")))
 
         a_prev_num = prev_ranks.get(m.away_team)
         a_is_promoted = (prev_s is not None) and (m.away_team not in prev_ranks)
-        a_prev_rank_str = f"#{a_prev_num}" if a_prev_num else ("N/A" if not prev_s else "PROMOTED")
+        a_prev_rank_str = f"#{a_prev_num}" if a_prev_num else ("N/A" if not prev_s else ("Promoted" if m_league == "EPL" else ("Relegated" if m.away_team in other_prev_ranks else "Promoted")))
 
         # In-Season Standing Rank Going Into The Match
-        md_pre_map = get_matchday_pre_ranks(db, m.season, m.matchday or 1)
+        md_pre_map = get_matchday_pre_ranks(db, m.season, m.matchday or 1, m_league)
         h_pre_num = md_pre_map.get(m.home_team)
         h_pre_rank_str = f"#{h_pre_num}" if h_pre_num else "MD 1"
 
@@ -561,9 +595,11 @@ def get_raw_matches_table(
             "matchday": m.matchday,
             "match_date": m.match_date.strftime("%m/%d/%Y") if m.match_date else None,
             "home_team": m.home_team,
+            "home_logo": logo_map.get(m.home_team) or "/static/images/crests/generic.png",
             "home_prev_rank": h_prev_rank_str,
             "home_pre_rank": h_pre_rank_str,
             "away_team": m.away_team,
+            "away_logo": logo_map.get(m.away_team) or "/static/images/crests/generic.png",
             "away_prev_rank": a_prev_rank_str,
             "away_pre_rank": a_pre_rank_str,
             "hthg": m.hthg,

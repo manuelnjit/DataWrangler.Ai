@@ -37,9 +37,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "EPL Quant API"
     ENVIRONMENT: str = "development"
 
-    # Default to a local SQLite database file in the project root (`./epl_quant.db`).
+    # Default to a local SQLite database file in the project root (`./data/epl_quant.db`).
     # For production (Render/PostgreSQL), replace with: `postgresql://user:pass@host:5432/dbname`
-    DATABASE_URL: str = "sqlite:///./epl_quant.db"
+    DATABASE_URL: str = "sqlite:///./data/epl_quant.db"
 
     # Stripe Payment Integration Credentials (Optional in dev, required for payments)
     STRIPE_SECRET_KEY: Optional[str] = None

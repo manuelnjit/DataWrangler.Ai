@@ -36,7 +36,14 @@ class FootballDataIngestor:
     def generate_all_seasons_map() -> Dict[str, str]:
         """Generates mapping from human season label (e.g. '1999-2000') to Football-Data 4-digit code (e.g. '9900', '2526')."""
         season_map = {}
-        for start_year in range(1993, 2026):
+        
+        now = datetime.now()
+        current_year = now.year
+        # If we are in July or later, the new season has started (e.g. July 2026 -> 2026-2027 season starts in 2026)
+        # If we are before July, we are still in the previous season (e.g. May 2026 -> 2025-2026 season started in 2025)
+        max_start_year = current_year if now.month >= 7 else current_year - 1
+        
+        for start_year in range(1993, max_start_year + 1):
             end_year = start_year + 1
             season_label = f"{start_year}-{end_year}"
 
@@ -109,9 +116,13 @@ class FootballDataIngestor:
         url = self.get_season_url(season_code, csv_code)
         logger.info(f"Extracting match data from Football-Data URL: {url}")
 
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/csv,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        }
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
             try:
-                response = await client.get(url)
+                response = await client.get(url, headers=headers)
                 if response.status_code == 200:
                     logger.info(f"Successfully extracted CSV for season code '{season_code}' ({len(response.text)} bytes)")
                     return response.text
@@ -180,10 +191,17 @@ class FootballDataIngestor:
         """Saves cleaned match records into SQLite using an idempotent UPSERT pattern."""
         inserted_count = 0
         updated_count = 0
+        
+        # Prevent intra-batch duplicates from crashing the DB commit
+        seen_in_batch = set()
 
         for rec in cleaned_records:
+            uniq_key = (rec["season"], rec["match_date"], rec["home_team"], rec["away_team"])
+            if uniq_key in seen_in_batch:
+                continue
+            seen_in_batch.add(uniq_key)
+
             existing_match = db.query(Match).filter(
-                Match.league == rec["league"],
                 Match.season == rec["season"],
                 Match.match_date == rec["match_date"],
                 Match.home_team == rec["home_team"],
@@ -191,6 +209,7 @@ class FootballDataIngestor:
             ).first()
 
             if existing_match:
+                existing_match.league = rec["league"]
                 existing_match.matchday = rec["matchday"]
                 existing_match.fthg = rec["fthg"]
                 existing_match.ftag = rec["ftag"]

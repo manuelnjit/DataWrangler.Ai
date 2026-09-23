@@ -266,6 +266,17 @@
             font-weight: 600;
         }
 
+        .upcoming-fixture-card .team-cell {
+            font-size: 0.75rem;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        
+        .upcoming-fixture-card .team-badge {
+            width: 20px;
+            height: 20px;
+        }
+
         .matchday-pill {
             display: inline-block;
             padding: 0.15rem 0.5rem;
@@ -636,18 +647,18 @@
 
         <!-- Mode Selector Tabs -->
         <div class="view-tab-bar">
-            <button class="tab-btn active" id="tab-standings-btn" onclick="switchView('standings')">🏆 League Standings Engine</button>
-            <button class="tab-btn" id="tab-rawsql-btn" onclick="switchView('rawsql')">🗄️ Raw SQL Match Database (<span id="sql-rows-count">Loading...</span>)</button>
+            <button class="tab-btn active" id="tab-standings-btn" onclick="switchView('standings')">League Standings Engine</button>
+            <button class="tab-btn" id="tab-rawsql-btn" onclick="switchView('rawsql')">Raw SQL Match Database (<span id="sql-rows-count">Loading...</span>)</button>
         </div>
 
         <!-- Terminal App Container -->
         <div class="terminal-app">
             <div class="terminal-header">
                 <div class="terminal-title">
-                    <span>⚡ DATAWRANGLER.AI ANALYTICS ENGINE</span>
+                    <span>DATAWRANGLER.AI ANALYTICS ENGINE</span>
                     <span style="color: var(--text-muted);">|</span>
                     <span id="active-terminal-title" style="color: var(--accent-magenta); display: inline-flex; align-items: center; gap: 0.5rem;">
-                        🏆 PREMIER LEAGUE HISTORICAL STANDINGS
+                        PREMIER LEAGUE HISTORICAL STANDINGS
                     </span>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -679,9 +690,9 @@
                         <div class="control-group">
                             <label class="control-label">Table Perspective</label>
                             <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr);">
-                                <button class="toggle-btn active" id="tbl-type-overall-btn" onclick="setStandingsTableType('overall')">🌐 Overall</button>
-                                <button class="toggle-btn" id="tbl-type-home-btn" onclick="setStandingsTableType('home')">🏠 Home</button>
-                                <button class="toggle-btn" id="tbl-type-away-btn" onclick="setStandingsTableType('away')">✈️ Away</button>
+                                <button class="toggle-btn active" id="tbl-type-overall-btn" onclick="setStandingsTableType('overall')">Overall</button>
+                                <button class="toggle-btn" id="tbl-type-home-btn" onclick="setStandingsTableType('home')">Home</button>
+                                <button class="toggle-btn" id="tbl-type-away-btn" onclick="setStandingsTableType('away')">Away</button>
                             </div>
                         </div>
 
@@ -698,23 +709,28 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 60px;">Pos</th>
-                                <th>Club Team</th>
-                                <th style="text-align: center;">P</th>
-                                <th style="text-align: center;">W</th>
-                                <th style="text-align: center;">D</th>
-                                <th style="text-align: center;">L</th>
-                                <th style="text-align: center;">GF</th>
-                                <th style="text-align: center;">GA</th>
-                                <th style="text-align: center;">GD</th>
-                                <th style="text-align: center; color: var(--accent-magenta);">Pts</th>
-                                <th>Prev Season Finish</th>
+                                <th style="width: 60px; cursor: pointer;" onclick="sortStandingsTable('pos')">Pos <span id="sort-icon-pos"></span></th>
+                                <th style="cursor: pointer;" onclick="sortStandingsTable('team')">Club Team <span id="sort-icon-team"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('played')">P <span id="sort-icon-played"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('won')">W <span id="sort-icon-won"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('drawn')">D <span id="sort-icon-drawn"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('lost')">L <span id="sort-icon-lost"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gf')">GF <span id="sort-icon-gf"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('ga')">GA <span id="sort-icon-ga"></span></th>
+                                <th style="text-align: center; cursor: pointer;" onclick="sortStandingsTable('gd')">GD <span id="sort-icon-gd"></span></th>
+                                <th style="text-align: center; color: var(--accent-magenta); cursor: pointer;" onclick="sortStandingsTable('points')">Pts <span id="sort-icon-points"></span></th>
+                                <th style="cursor: pointer;" onclick="sortStandingsTable('prev_rank')">Prev Season Finish <span id="sort-icon-prev_rank"></span></th>
                             </tr>
                         </thead>
                         <tbody id="standings-table-body">
                             <!-- Dynamic Standings Rows -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Table Legend -->
+                <div id="dynamic-standings-legend" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 1rem; padding-left: 0.25rem;">
+                    <!-- Populated dynamically by javascript -->
                 </div>
             </div>
 
@@ -725,17 +741,13 @@
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">📅 UPCOMING FIXTURES & 1-CLICK QUANT MATCHUPS</span>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #38bdf8;">UPCOMING FIXTURES & 1-CLICK QUANT MATCHUPS</span>
                             <span class="matchday-pill" id="upcoming-md-pill">MD 1 (Next Up)</span>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SELECT MATCHDAY:</label>
                             <select id="upcoming-matchday-select" onchange="fetchUpcomingFixtures()" style="width: 170px; padding: 0.35rem 0.65rem; font-size: 0.8rem;"></select>
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-left:0.5rem;">
-                                <label style="margin-right:0.5rem;"><input type="radio" name="upcoming-rank-option" value="prev" checked onchange="fetchUpcomingFixtures()" /> Last Season Rank</label>
-                                <label><input type="radio" name="upcoming-rank-option" value="pre" onchange="fetchUpcomingFixtures()" /> Rank Going In</label>
-                            </span>
                         </div>
                     </div>
 
@@ -749,9 +761,9 @@
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--accent-magenta);">📊 INTERACTIVE PROBABILITY WIDGET DASHBOARD</span>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--accent-magenta);">INTERACTIVE PROBABILITY WIDGET DASHBOARD</span>
                             <span id="widget-save-indicator" style="font-size: 0.75rem; font-family: var(--font-mono); color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; opacity: 0; transition: opacity 0.3s ease;">
-                                ✓ AUTO-SAVED
+                                AUTO-SAVED
                             </span>
                         </div>
                         
@@ -763,12 +775,12 @@
 
                             <!-- HT vs FT Switcher Toggle -->
                             <div class="toggle-buttons" style="grid-template-columns: 1fr 1fr; width: 260px;">
-                                <button class="toggle-btn active" id="stat-toggle-ht-btn" onclick="setStatsMode('ht')">⏱️ Half-Time</button>
-                                <button class="toggle-btn" id="stat-toggle-ft-btn" onclick="setStatsMode('ft')">⚽ Full-Time</button>
+                                <button class="toggle-btn active" id="stat-toggle-ht-btn" onclick="setStatsMode('ht')">Half-Time</button>
+                                <button class="toggle-btn" id="stat-toggle-ft-btn" onclick="setStatsMode('ft')">Full-Time</button>
                             </div>
 
                             <button class="btn-outline" onclick="resetDefaultWidgets()" style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
-                                ↺ Reset Default 8
+                                Reset Default 8
                             </button>
                         </div>
                     </div>
@@ -827,7 +839,7 @@
                     <!-- Row 2: Standings Rank Filters Sub-Bar (Home Prev, Away Prev, Home Pre-Match, Away Pre-Match) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.75rem; width: 100%; background: var(--bg-input); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
                         <div class="control-group">
-                            <label class="control-label" style="color: var(--accent-magenta);">🏆 Home Prev Finish</label>
+                            <label class="control-label" style="color: var(--accent-magenta);">Home Prev Finish</label>
                             <select id="sql-home-prev-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
                                 <option value="ALL">All Prev Ranks</option>
                                 <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
@@ -839,7 +851,7 @@
                         </div>
 
                         <div class="control-group">
-                            <label class="control-label" style="color: var(--accent-magenta);">🏆 Away Prev Finish</label>
+                            <label class="control-label" style="color: var(--accent-magenta);">Away Prev Finish</label>
                             <select id="sql-away-prev-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
                                 <option value="ALL">All Prev Ranks</option>
                                 <option value="TOP4">Top 4 Last Season (#1 - #4)</option>
@@ -851,7 +863,7 @@
                         </div>
 
                         <div class="control-group">
-                            <label class="control-label" style="color: #38bdf8;">📈 Home Rank Going In</label>
+                            <label class="control-label" style="color: #38bdf8;">Home Rank Going In</label>
                             <select id="sql-home-pre-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
                                 <option value="ALL">All In-Season Ranks</option>
                                 <option value="TOP4">Top 4 Going In (#1 - #4)</option>
@@ -862,7 +874,7 @@
                         </div>
 
                         <div class="control-group">
-                            <label class="control-label" style="color: #38bdf8;">📈 Away Rank Going In</label>
+                            <label class="control-label" style="color: #38bdf8;">Away Rank Going In</label>
                             <select id="sql-away-pre-filter" onchange="resetAndFetchSQLTable()" style="padding: 0.45rem; font-size: 0.825rem;">
                                 <option value="ALL">All In-Season Ranks</option>
                                 <option value="TOP4">Top 4 Going In (#1 - #4)</option>
@@ -889,10 +901,10 @@
                         <!-- Action Buttons: Clear All Filters & Column Customizer -->
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <button class="btn-outline" onclick="clearAllSQLFilters()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem; border-color: rgba(244, 114, 182, 0.4); color: var(--accent-magenta);">
-                                🧹 Clear All Filters
+                                Clear All Filters
                             </button>
                             <button class="btn-outline" onclick="toggleColumnCustomizerPanel()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-                                ⚙️ Customize Columns (<span id="active-cols-capacity-pill">9 / 9 Max</span>)
+                                Customize Columns (<span id="active-cols-capacity-pill">9 / 9 Max</span>)
                             </button>
                         </div>
 
@@ -900,9 +912,9 @@
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);" id="venue-toggle-title">VENUE:</span>
                             <div class="toggle-buttons" style="grid-template-columns: repeat(3, 1fr); width: 480px;">
-                                <button class="toggle-btn active" id="sql-venue-all-btn" onclick="setSQLVenueRole('all')">🌐 All Matches (H2H)</button>
-                                <button class="toggle-btn" id="sql-venue-home-btn" onclick="setSQLVenueRole('home')">🏠 Team 1 at Home</button>
-                                <button class="toggle-btn" id="sql-venue-away-btn" onclick="setSQLVenueRole('away')">✈️ Team 1 Away</button>
+                                <button class="toggle-btn active" id="sql-venue-all-btn" onclick="setSQLVenueRole('all')">All Matches (H2H)</button>
+                                <button class="toggle-btn" id="sql-venue-home-btn" onclick="setSQLVenueRole('home')">Team 1 at Home</button>
+                                <button class="toggle-btn" id="sql-venue-away-btn" onclick="setSQLVenueRole('away')">Team 1 Away</button>
                             </div>
                         </div>
                     </div>
@@ -911,10 +923,10 @@
                     <div id="column-customizer-panel" class="column-manager-panel" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
                             <span style="font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-magenta);">
-                                ⚙️ TABLE COLUMN MANAGER (SELECT UP TO 9 ACTIVE COLUMNS)
+                                TABLE COLUMN MANAGER (SELECT UP TO 9 ACTIVE COLUMNS)
                             </span>
                             <span id="col-limit-warning" style="font-size: 0.75rem; color: #f87171; font-weight: 600; display: none;">
-                                ⚠️ 9/9 Max capacity reached. Uncheck a column to swap in another!
+                                9/9 Max capacity reached. Uncheck a column to swap in another!
                             </span>
                         </div>
                         <div class="col-checkbox-grid" id="column-checkboxes-container">
@@ -935,69 +947,14 @@
                 </div>
 
                 <button class="load-more-btn" id="load-more-sql-btn" onclick="loadMoreSQLMatches()">
-                    ⚡ Load More Matches (+25 Rows)
+                    Load More Matches (+25 Rows)
                 </button>
             </div>
         </div>
     </main>
 
     <script>
-        // Official Premier League Club Crest CDN Badges for ALL 51 Historical Teams (1993-2026)
-        const OFFICIAL_TEAM_CRESTS = {
-            "Arsenal": "https://resources.premierleague.com/premierleague/badges/50/t3.png",
-            "Aston Villa": "https://resources.premierleague.com/premierleague/badges/50/t7.png",
-            "Barnsley": "https://resources.premierleague.com/premierleague/badges/50/t45.png",
-            "Birmingham": "https://resources.premierleague.com/premierleague/badges/50/t35.png",
-            "Blackburn": "https://resources.premierleague.com/premierleague/badges/50/t5.png",
-            "Blackpool": "https://resources.premierleague.com/premierleague/badges/50/t111.png",
-            "Bolton": "https://resources.premierleague.com/premierleague/badges/50/t30.png",
-            "Bournemouth": "https://resources.premierleague.com/premierleague/badges/50/t91.png",
-            "Bradford": "https://resources.premierleague.com/premierleague/badges/50/t32.png",
-            "Brentford": "https://resources.premierleague.com/premierleague/badges/50/t94.png",
-            "Brighton": "https://resources.premierleague.com/premierleague/badges/50/t36.png",
-            "Brighton & Hove Albion": "https://resources.premierleague.com/premierleague/badges/50/t36.png",
-            "Burnley": "https://resources.premierleague.com/premierleague/badges/50/t90.png",
-            "Cardiff": "https://resources.premierleague.com/premierleague/badges/50/t97.png",
-            "Charlton": "https://resources.premierleague.com/premierleague/badges/50/t33.png",
-            "Chelsea": "https://resources.premierleague.com/premierleague/badges/50/t8.png",
-            "Coventry": "https://resources.premierleague.com/premierleague/badges/50/t34.png",
-            "Crystal Palace": "https://resources.premierleague.com/premierleague/badges/50/t31.png",
-            "Derby": "https://resources.premierleague.com/premierleague/badges/50/t28.png",
-            "Everton": "https://resources.premierleague.com/premierleague/badges/50/t11.png",
-            "Fulham": "https://resources.premierleague.com/premierleague/badges/50/t54.png",
-            "Huddersfield": "https://resources.premierleague.com/premierleague/badges/50/t158.png",
-            "Hull": "https://resources.premierleague.com/premierleague/badges/50/t88.png",
-            "Ipswich": "https://resources.premierleague.com/premierleague/badges/50/t40.png",
-            "Leeds": "https://resources.premierleague.com/premierleague/badges/50/t2.png",
-            "Leicester": "https://resources.premierleague.com/premierleague/badges/50/t13.png",
-            "Liverpool": "https://resources.premierleague.com/premierleague/badges/50/t14.png",
-            "Luton": "https://resources.premierleague.com/premierleague/badges/50/t102.png",
-            "Manchester City": "https://resources.premierleague.com/premierleague/badges/50/t43.png",
-            "Manchester United": "https://resources.premierleague.com/premierleague/badges/50/t1.png",
-            "Middlesbrough": "https://resources.premierleague.com/premierleague/badges/50/t25.png",
-            "Newcastle": "https://resources.premierleague.com/premierleague/badges/50/t4.png",
-            "Norwich": "https://resources.premierleague.com/premierleague/badges/50/t44.png",
-            "Nottingham Forest": "https://resources.premierleague.com/premierleague/badges/50/t17.png",
-            "Oldham": "https://resources.premierleague.com/premierleague/badges/50/t55.png",
-            "Portsmouth": "https://resources.premierleague.com/premierleague/badges/50/t38.png",
-            "QPR": "https://resources.premierleague.com/premierleague/badges/50/t52.png",
-            "Reading": "https://resources.premierleague.com/premierleague/badges/50/t108.png",
-            "Sheffield United": "https://resources.premierleague.com/premierleague/badges/50/t49.png",
-            "Sheffield Weds": "https://resources.premierleague.com/premierleague/badges/50/t18.png",
-            "Sheffield Wednesday": "https://resources.premierleague.com/premierleague/badges/50/t18.png",
-            "Southampton": "https://resources.premierleague.com/premierleague/badges/50/t20.png",
-            "Stoke": "https://resources.premierleague.com/premierleague/badges/50/t110.png",
-            "Sunderland": "https://resources.premierleague.com/premierleague/badges/50/t29.png",
-            "Swansea": "https://resources.premierleague.com/premierleague/badges/50/t80.png",
-            "Swindon": "https://resources.premierleague.com/premierleague/badges/50/t56.png",
-            "Tottenham": "https://resources.premierleague.com/premierleague/badges/50/t6.png",
-            "Watford": "https://resources.premierleague.com/premierleague/badges/50/t57.png",
-            "West Brom": "https://resources.premierleague.com/premierleague/badges/50/t105.png",
-            "West Ham": "https://resources.premierleague.com/premierleague/badges/50/t21.png",
-            "Wigan": "https://resources.premierleague.com/premierleague/badges/50/t112.png",
-            "Wimbledon": "https://resources.premierleague.com/premierleague/badges/50/t58.png",
-            "Wolves": "https://resources.premierleague.com/premierleague/badges/50/t39.png"
-        };
+        // Official Team Crests are now served dynamically from the Database API (Task 4.5)
 
         // Master Catalog of all 14 Available Table Columns
         const MASTER_COLUMN_CATALOG = [
@@ -1058,8 +1015,8 @@
 
         let activeWidgetKeys = [];
 
-        function getTeamBadgeHTML(teamName) {
-            const url = OFFICIAL_TEAM_CRESTS[teamName];
+        function getTeamBadgeHTML(teamName, logoUrl) {
+            const url = logoUrl || null;
             const fallbackLetters = (teamName || 'TM').substring(0, 2).toUpperCase();
             
             if (!url) {
@@ -1083,9 +1040,18 @@
             if (!rankLabel || rankLabel === 'N/A') {
                 return `<span style="color: var(--text-muted); font-size: 0.75rem;">N/A</span>`;
             }
-            if (rankLabel === 'PROMOTED') {
-                return `<span class="promoted-tag">PROMOTED</span>`;
+            
+            const upper = rankLabel.toUpperCase();
+            if (upper === 'PROMOTED') {
+                return `<span style="background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">PROMOTED</span>`;
             }
+            if (upper === 'RELEGATED') {
+                return `<span style="background-color: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">RELEGATED</span>`;
+            }
+            if (rankLabel === '#1') {
+                return `<span style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px;">CHAMPION</span>`;
+            }
+            
             return `<span class="rank-tag">${rankLabel}</span>`;
         }
 
@@ -1105,6 +1071,7 @@
         let currentStatsMode = 'ht'; // 'ht' or 'ft'
         let currentDatasetStats = null;
         let availableSeasonsList = [];
+        let LATEST_SEASON = null;
         let totalSQLMatchesCount = 0;
         let loadedSQLMatches = [];
 
@@ -1116,6 +1083,7 @@
                 select.innerHTML = '';
                 leagues.forEach(l => {
                     const option = new Option(l === 'EPL' ? 'Premier League' : l, l);
+                    if (l === 'EPL') option.selected = true;
                     select.add(option);
                 });
             } catch (e) {
@@ -1128,6 +1096,7 @@
             const isStandings = standingsTab.classList.contains('active');
             switchView(isStandings ? 'standings' : 'rawsql');
 
+            populateMatchdayFilters();
             await loadTeamsAndSeasons();
             await fetchUpcomingFixtures();
             await fetchStandingsTable();
@@ -1211,7 +1180,8 @@
             const selectedMd = mdSelect.value;
             const league = document.getElementById('global-league-select').value;
 
-            let url = `/api/v1/terminal/upcoming?season=2025-2026&league=${encodeURIComponent(league)}`;
+            // Omit season param so backend resolves it dynamically
+            let url = `/api/v1/terminal/upcoming?league=${encodeURIComponent(league)}`;
             if (selectedMd && selectedMd !== 'ALL') {
                 url += `&matchday=${encodeURIComponent(selectedMd)}`;
             }
@@ -1236,15 +1206,29 @@
                 document.getElementById('upcoming-md-pill').textContent = `MD ${currentMd} (${data.total_upcoming} Fixtures)`;
 
                 // Ensure matchday select is set
-                if (!mdSelect.value) {
+                if (!mdSelect.value || mdSelect.value === "") {
                     mdSelect.value = currentMd;
                 }
 
-                const rankOption = document.querySelector('input[name=\"upcoming-rank-option\"]:checked').value;
-                const showPre = rankOption === 'pre';
                 data.matches.forEach(m => {
                     const card = document.createElement('div');
                     card.className = 'upcoming-fixture-card';
+
+                    let scoreHtml = '';
+                    if (m.status === 'COMPLETED') {
+                        scoreHtml = `
+                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 6px;">
+                                <span style="font-family: var(--font-mono); font-size: 0.9rem; font-weight: 800;">${m.fthg} - ${m.ftag}</span>
+                                <span style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">FT</span>
+                            </div>
+                        `;
+                    } else {
+                        scoreHtml = `
+                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0.25rem 0.5rem;">
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">vs</span>
+                            </div>
+                        `;
+                    }
 
                     card.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
@@ -1252,23 +1236,19 @@
                                 MD ${m.matchday}
                             </span>
                             <span style="font-family: var(--font-mono); font-size: 0.725rem; color: var(--text-muted);">
-                                🗓️ ${m.match_date}
+                                ${m.match_date}
                             </span>
                         </div>
 
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.25rem 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>${getTeamBadgeHTML(m.home_team)}</div>
-                                <div style="display: flex; align-items: center; gap: 0.3rem;">
-                                    ${showPre ? formatPreMatchRankTag(m.home_pre_rank) : formatRankTag(m.home_prev_rank)}
-                                </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.75rem 0;">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1;">
+                                ${getTeamBadgeHTML(m.home_team, m.home_logo)}
                             </div>
+                            
+                            ${scoreHtml}
 
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>${getTeamBadgeHTML(m.away_team)}</div>
-                                <div style="display: flex; align-items: center; gap: 0.3rem;">
-                                    ${showPre ? formatPreMatchRankTag(m.away_pre_rank) : formatRankTag(m.away_prev_rank)}
-                                </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1;">
+                                ${getTeamBadgeHTML(m.away_team, m.away_logo)}
                             </div>
                         </div>
                     `;
@@ -1413,15 +1393,19 @@
         }
 
         function populateMatchdayFilters() {
+            const league = document.getElementById('global-league-select')?.value || 'EPL';
+            const numTeams = (league === 'Championship') ? 24 : 20;
+            const numMatchdays = (numTeams - 1) * 2;
+            
             const standingsMdSelect = document.getElementById('standings-matchday-select');
             const sqlMdSelect = document.getElementById('sql-matchday-filter');
             const upcomingMdSelect = document.getElementById('upcoming-matchday-select');
 
             standingsMdSelect.innerHTML = '<option value="ALL">Full Season (End of Season)</option>';
             sqlMdSelect.innerHTML = '<option value="ALL">All Matchdays</option>';
-            upcomingMdSelect.innerHTML = '';
+            upcomingMdSelect.innerHTML = '<option value="" selected>Auto (Next Upcoming)</option>';
 
-            for (let i = 1; i <= 38; i++) {
+            for (let i = 1; i <= numMatchdays; i++) {
                 standingsMdSelect.add(new Option(`Matchday ${i}`, i));
                 sqlMdSelect.add(new Option(`Matchday ${i}`, i));
                 upcomingMdSelect.add(new Option(`Matchday ${i}`, i));
@@ -1438,11 +1422,14 @@
         }
 
         async function fetchStandingsTable() {
-            const season = document.getElementById('standings-season-select').value || '2025-2026';
-            const matchdayVal = document.getElementById('standings-matchday-select').value;
             const league = document.getElementById('global-league-select').value;
+            const season = document.getElementById('standings-season-select').value || LATEST_SEASON;
+            const matchdayVal = document.getElementById('standings-matchday-select').value;
 
-            let url = `/api/v1/terminal/standings?season=${encodeURIComponent(season)}&table_type=${currentStandingsTableType}&league=${encodeURIComponent(league)}`;
+            let url = `/api/v1/terminal/standings?table_type=${currentStandingsTableType}&league=${encodeURIComponent(league)}`;
+            if (season) {
+                url += `&season=${encodeURIComponent(season)}`;
+            }
             if (matchdayVal && matchdayVal !== 'ALL') {
                 url += `&matchday=${encodeURIComponent(matchdayVal)}`;
             }
@@ -1456,28 +1443,154 @@
 
                 const tbody = document.getElementById('standings-table-body');
                 tbody.innerHTML = '';
+                
+                const totalTeams = data.total_teams;
+                
+                // Update Dynamic Legend
+                const legendContainer = document.getElementById('dynamic-standings-legend');
+                if (legendContainer) {
+                    if (league === 'EPL' || league === 'Premier League') {
+                        legendContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #4ade80; border-radius: 2px;"></div>
+                                Champions League Qualification
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #fb923c; border-radius: 2px;"></div>
+                                Europa League Qualification
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #f87171; border-radius: 2px;"></div>
+                                Relegation
+                            </div>
+                        `;
+                    } else if (league === 'Championship') {
+                        legendContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #4ade80; border-radius: 2px;"></div>
+                                Automatic Promotion
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #38bdf8; border-radius: 2px;"></div>
+                                Promotion Playoffs
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <div style="width: 10px; height: 10px; background-color: #f87171; border-radius: 2px;"></div>
+                                Relegation
+                            </div>
+                        `;
+                    } else {
+                        legendContainer.innerHTML = '';
+                    }
+                }
 
-                data.standings.forEach(r => {
-                    const tr = document.createElement('tr');
-                    
-                    tr.innerHTML = `
-                        <td style="font-family: var(--font-mono); font-weight: 700; color: ${r.pos <= 4 ? '#4ade80' : (r.pos >= 18 ? '#f87171' : 'var(--text-primary)')};">${r.pos}</td>
-                        <td>${getTeamBadgeHTML(r.team)}</td>
-                        <td style="text-align: center; font-family: var(--font-mono);">${r.played}</td>
-                        <td style="text-align: center; font-family: var(--font-mono); color: #4ade80;">${r.won}</td>
-                        <td style="text-align: center; font-family: var(--font-mono); color: #facc15;">${r.drawn}</td>
-                        <td style="text-align: center; font-family: var(--font-mono); color: #f87171;">${r.lost}</td>
-                        <td style="text-align: center; font-family: var(--font-mono);">${r.gf}</td>
-                        <td style="text-align: center; font-family: var(--font-mono);">${r.ga}</td>
-                        <td style="text-align: center; font-family: var(--font-mono); font-weight: 700; color: ${r.gd > 0 ? '#4ade80' : (r.gd < 0 ? '#f87171' : 'var(--text-secondary)')};">${r.gd > 0 ? '+' + r.gd : r.gd}</td>
-                        <td style="text-align: center; font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; color: var(--accent-magenta);">${r.points}</td>
-                        <td>${formatRankTag(r.prev_rank)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                window.currentStandingsData = data.standings;
+                window.currentStandingsLeague = league;
+                window.currentStandingsTotalTeams = data.total_teams;
+                
+                // Reset Sort State
+                currentStandingsSortColumn = 'pos';
+                currentStandingsSortAsc = true;
+                updateStandingsSortIcons();
+                
+                renderStandingsTable();
             } catch (e) {
                 console.error('Failed to fetch standings table:', e);
             }
+        }
+
+        let currentStandingsSortColumn = 'pos';
+        let currentStandingsSortAsc = true;
+
+        function sortStandingsTable(column) {
+            if (!window.currentStandingsData) return;
+            
+            if (currentStandingsSortColumn === column) {
+                currentStandingsSortAsc = !currentStandingsSortAsc;
+            } else {
+                currentStandingsSortColumn = column;
+                currentStandingsSortAsc = true;
+            }
+            
+            updateStandingsSortIcons();
+            
+            window.currentStandingsData.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                // Special handling for Prev Season Finish
+                if (column === 'prev_rank') {
+                    const parseRank = (val) => {
+                        if (val === 'N/A') return Infinity;
+                        if (val === 'PROMOTED') return Infinity - 1;
+                        if (val === 'CHAMPION') return 1;
+                        if (val.startsWith('#')) return parseInt(val.substring(1));
+                        return Infinity;
+                    };
+                    valA = parseRank(valA);
+                    valB = parseRank(valB);
+                }
+                
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return currentStandingsSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                
+                return currentStandingsSortAsc ? valA - valB : valB - valA;
+            });
+            
+            renderStandingsTable();
+        }
+
+        function updateStandingsSortIcons() {
+            const columns = ['pos', 'team', 'played', 'won', 'drawn', 'lost', 'gf', 'ga', 'gd', 'points', 'prev_rank'];
+            columns.forEach(col => {
+                const icon = document.getElementById(`sort-icon-${col}`);
+                if (icon) {
+                    if (col === currentStandingsSortColumn) {
+                        icon.innerHTML = currentStandingsSortAsc ? ' <small>▲</small>' : ' <small>▼</small>';
+                    } else {
+                        icon.innerHTML = '';
+                    }
+                }
+            });
+        }
+
+        function renderStandingsTable() {
+            const tbody = document.getElementById('standings-table-body');
+            tbody.innerHTML = '';
+            
+            if (!window.currentStandingsData) return;
+
+            window.currentStandingsData.forEach(r => {
+                const tr = document.createElement('tr');
+                
+                let rowStyle = '';
+                if (window.currentStandingsLeague === 'EPL' || window.currentStandingsLeague === 'Premier League') {
+                    if (r.pos <= 4) rowStyle = 'border-left: 3px solid #4ade80;';
+                    else if (r.pos === 5) rowStyle = 'border-left: 3px solid #fb923c;';
+                    else if (r.pos > window.currentStandingsTotalTeams - 3) rowStyle = 'border-left: 3px solid #f87171;';
+                } else if (window.currentStandingsLeague === 'Championship') {
+                    if (r.pos <= 2) rowStyle = 'border-left: 3px solid #4ade80;';
+                    else if (r.pos >= 3 && r.pos <= 8) rowStyle = 'border-left: 3px solid #38bdf8;';
+                    else if (r.pos > window.currentStandingsTotalTeams - 3) rowStyle = 'border-left: 3px solid #f87171;';
+                }
+                tr.style.cssText = rowStyle;
+                
+                tr.innerHTML = `
+                    <td style="font-family: var(--font-mono); font-weight: 700; padding-left: 0.75rem;">${r.pos}</td>
+                    <td>${getTeamBadgeHTML(r.team, r.logo)}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.played}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.won}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.drawn}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.lost}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.gf}</td>
+                    <td style="text-align: center; font-family: var(--font-mono);">${r.ga}</td>
+                    <td style="text-align: center; font-family: var(--font-mono); font-weight: 700; color: ${r.gd > 0 ? '#4ade80' : (r.gd < 0 ? '#f87171' : 'var(--text-secondary)')};">${r.gd > 0 ? '+' + r.gd : r.gd}</td>
+                    <td style="text-align: center; font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; color: var(--accent-magenta);">${r.points}</td>
+                    <td>${formatRankTag(r.prev_rank)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         // --- INTERACTIVE WIDGET DASHBOARD ENGINE ---
@@ -1637,8 +1750,9 @@
                 sqlTeam2Filter.innerHTML = '<option value="ALL">All Opponents (Any)</option>';
 
                 teams.forEach(t => {
-                    sqlTeam1Filter.add(new Option(t, t));
-                    sqlTeam2Filter.add(new Option(t, t));
+                    const teamName = typeof t === 'string' ? t : t.name;
+                    sqlTeam1Filter.add(new Option(teamName, teamName));
+                    sqlTeam2Filter.add(new Option(teamName, teamName));
                 });
 
                 // 2. Fetch Seasons
@@ -1649,9 +1763,17 @@
                 const startFilter = document.getElementById('sql-season-start-filter');
                 const endFilter = document.getElementById('sql-season-end-filter');
 
-                standingsSeasonSelect.innerHTML = '';
-                startFilter.innerHTML = '<option value="ALL">Earliest (1993-1994)</option>';
-                endFilter.innerHTML = '<option value="ALL">Latest (2025-2026)</option>';
+                if (availableSeasonsList.length > 0) {
+                    LATEST_SEASON = availableSeasonsList[0];
+                    const earliestSeason = availableSeasonsList[availableSeasonsList.length - 1];
+                    standingsSeasonSelect.innerHTML = '';
+                    startFilter.innerHTML = `<option value="ALL">Earliest (${earliestSeason})</option>`;
+                    endFilter.innerHTML = `<option value="ALL">Latest (${LATEST_SEASON})</option>`;
+                } else {
+                    standingsSeasonSelect.innerHTML = '';
+                    startFilter.innerHTML = '<option value="ALL">Earliest</option>';
+                    endFilter.innerHTML = '<option value="ALL">Latest</option>';
+                }
 
                 availableSeasonsList.forEach(s => {
                     standingsSeasonSelect.add(new Option(s, s));
@@ -1679,7 +1801,7 @@
                 endFilter.value = 'ALL';
             } else {
                 document.getElementById(`preset-${yearsCount}-btn`).classList.add('active');
-                endFilter.value = availableSeasonsList[0]; // Latest (2025-2026)
+                endFilter.value = availableSeasonsList[0]; 
                 const targetIdx = Math.min(yearsCount - 1, availableSeasonsList.length - 1);
                 startFilter.value = availableSeasonsList[targetIdx];
             }
@@ -1692,11 +1814,11 @@
             const awayBtn = document.getElementById('sql-venue-away-btn');
 
             if (team1 && team1 !== 'ALL') {
-                homeBtn.textContent = `🏠 ${team1} at Home`;
-                awayBtn.textContent = `✈️ ${team1} Away`;
+                homeBtn.textContent = `${team1} at Home`;
+                awayBtn.textContent = `${team1} Away`;
             } else {
-                homeBtn.textContent = `🏠 Team 1 at Home`;
-                awayBtn.textContent = `✈️ Team 1 Away`;
+                homeBtn.textContent = `Team 1 at Home`;
+                awayBtn.textContent = `Team 1 Away`;
             }
         }
 
@@ -1774,7 +1896,7 @@
                     loadMoreBtn.style.display = 'none';
                 } else {
                     loadMoreBtn.style.display = 'block';
-                    loadMoreBtn.textContent = `⚡ Load More Matches (+25 Rows, ${totalSQLMatchesCount - loadedSQLMatches.length} Remaining)`;
+                    loadMoreBtn.textContent = `Load More Matches (+25 Rows, ${totalSQLMatchesCount - loadedSQLMatches.length} Remaining)`;
                 }
 
                 renderRawSQLRows(loadedSQLMatches);
@@ -1809,7 +1931,7 @@
                                 rowHTML += `<td>${m.match_date}</td>`;
                                 break;
                             case 'home_team':
-                                rowHTML += `<td>${getTeamBadgeHTML(m.home_team)}</td>`;
+                                rowHTML += `<td>${getTeamBadgeHTML(m.home_team, m.home_logo)}</td>`;
                                 break;
                             case 'home_prev_rank':
                                 rowHTML += `<td>${formatRankTag(m.home_prev_rank)}</td>`;
@@ -1818,7 +1940,7 @@
                                 rowHTML += `<td>${formatPreMatchRankTag(m.home_pre_rank)}</td>`;
                                 break;
                             case 'away_team':
-                                rowHTML += `<td>${getTeamBadgeHTML(m.away_team)}</td>`;
+                                rowHTML += `<td>${getTeamBadgeHTML(m.away_team, m.away_logo)}</td>`;
                                 break;
                             case 'away_prev_rank':
                                 rowHTML += `<td>${formatRankTag(m.away_prev_rank)}</td>`;
@@ -1863,13 +1985,13 @@
                 rawsqlTab.classList.remove('active');
                 standingsView.style.display = 'flex';
                 rawsqlView.classList.remove('active');
-                document.getElementById('active-terminal-title').textContent = `🏆 ${league} HISTORICAL STANDINGS`;
+                document.getElementById('active-terminal-title').textContent = `${league} HISTORICAL STANDINGS`;
             } else {
                 standingsTab.classList.remove('active');
                 rawsqlTab.classList.add('active');
                 standingsView.style.display = 'none';
                 rawsqlView.classList.add('active');
-                document.getElementById('active-terminal-title').textContent = '🗄️ RAW SQL MATCH DATABASE TERMINAL';
+                document.getElementById('active-terminal-title').textContent = 'RAW SQL MATCH DATABASE TERMINAL';
             }
         }
 
